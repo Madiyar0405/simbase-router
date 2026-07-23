@@ -6,168 +6,168 @@ routes:
     comp-973453: # Тестовая среда для разработки
       url: http://10.1.0.3/api/
       login: enbek.api
-      password: "12345678"
+      password: "qwerty1234"
       bin: null
       interface-id: "C070003"
 
     comp-747944: # Филиал по области Ұлытау
       url: http://10.1.0.26/api/
       login: enbek.api
-      password: "12345678"
+      password: "qwerty1234"
       bin: "220641027053"
       interface-id: "C09B003"
 
     comp-747943: # Филиал по области Жетісу
       url: http://10.1.0.17/api/
       login: enbek.api
-      password: "12345678"
+      password: "qwerty1234"
       bin: "220641027192"
       interface-id: "C09A003"
 
     comp-747942: # Филиал по области Абай
       url: http://10.1.0.8/api/
       login: enbek.api
-      password: "12345678"
+      password: "qwerty1234"
       bin: "220641025671"
       interface-id: "C099003"
 
     comp-570: # Аппарат Правления Общества
       url: http://10.1.0.4/api/
       login: enbek.api
-      password: "12345678"
+      password: "qwerty1234"
       bin: "160440007161"
       interface-id: "C065003"
 
     comp-569: # Центральный филиал Общества по координации деятельности социального и пенсионного обеспечения
       url: http://10.1.0.4/api/
       login: enbek.api
-      password: "12345678"
+      password: "qwerty1234"
       bin: "160440007161"
       interface-id: "C065003"
 
     comp-217: # Филиал по государственному учету земель и земельно-кадастровых работ
       url: http://10.1.0.27/api/
       login: enbek.api
-      password: "12345678"
+      password: "qwerty1234"
       bin: "160741009481"
       interface-id: "C09C003"
 
     comp-216: # Филиал по Туркестанской области
       url: http://10.1.0.25/api/
       login: enbek.api
-      password: "12345678"
+      password: "qwerty1234"
       bin: "180541003290"
       interface-id: "C094003"
 
     comp-215: # Филиал по Северо-Казахстанской области
       url: http://10.1.0.24/api/
       login: enbek.api
-      password: "12345678"
+      password: "qwerty1234"
       bin: "180541003378"
       interface-id: "C096003"
 
     comp-214: # Филиал по Павлодарской области
       url: http://10.1.0.23/api/
       login: enbek.api
-      password: "12345678"
+      password: "qwerty1234"
       bin: "180541002837"
       interface-id: "C095003"
 
     comp-213: # Филиал по Мангистауской области
       url: http://10.1.0.22/api/
       login: enbek.api
-      password: "12345678"
+      password: "qwerty1234"
       bin: "180541002519"
       interface-id: "C093003"
 
     comp-212: # Филиал по Кызылординской области
       url: http://10.1.0.21/api/
       login: enbek.api
-      password: "12345678"
+      password: "qwerty1234"
       bin: "180541003111"
       interface-id: "C092003"
 
     comp-211: # Филиал по Костанайской области
       url: http://10.1.0.20/api/
       login: enbek.api
-      password: "12345678"
+      password: "qwerty1234"
       bin: "180541002758"
       interface-id: "C091003"
 
     comp-210: # Филиал по Карагандинской области
       url: http://10.1.0.19/api/
       login: enbek.api
-      password: "12345678"
+      password: "qwerty1234"
       bin: "180541000305"
       interface-id: "C090003"
 
     comp-209: # Филиал по Западно-Казахстанской области
       url: http://10.1.0.18/api/
       login: enbek.api
-      password: "12345678"
+      password: "qwerty1234"
       bin: "180541002410"
       interface-id: "C08E003"
 
     comp-208: # Филиал по Жамбылской области
       url: http://10.1.0.16/api/
       login: enbek.api
-      password: "12345678"
+      password: "qwerty1234"
       bin: "180541001204"
       interface-id: "C08F003"
 
     comp-207: # Филиал по Восточно-Казахстанской области
       url: http://10.1.0.15/api/
       login: enbek.api
-      password: "12345678"
+      password: "qwerty1234"
       bin: "180541001294"
       interface-id: "C097003"
 
     comp-206: # Филиал по Атырауской области
       url: http://10.1.0.14/api/
       login: enbek.api
-      password: "12345678"
+      password: "qwerty1234"
       bin: "180541002986"
       interface-id: "C08D003"
 
     comp-205: # Филиал по Алматинской области
       url: http://10.1.0.13/api/
       login: enbek.api
-      password: "12345678"
+      password: "qwerty1234"
       bin: "180541000612"
       interface-id: "C08C003"
 
     comp-204: # Филиал по Актюбинской области
       url: http://10.1.0.12/api/
       login: enbek.api
-      password: "12345678"
+      password: "qwerty1234"
       bin: "180541001918"
       interface-id: "C08B003"
 
     comp-203: # Филиал по Акмолинской области
       url: http://10.1.0.9/api/
       login: enbek.api
-      password: "12345678"
+      password: "qwerty1234"
       bin: "180541001313"
       interface-id: "C08A003"
 
     comp-202: # Филиал по городу Шымкент
       url: http://10.1.0.7/api/
       login: enbek.api
-      password: "12345678"
+      password: "qwerty1234"
       bin: "180941014697"
       interface-id: "C098003"
 
     comp-201: # Филиал по городу Алматы
       url: http://10.1.0.6/api/
       login: enbek.api
-      password: "12345678"
+      password: "qwerty1234"
       bin: "180541001958"
       interface-id: "C089003"
 
     comp-200: # Филиал по городу Астана
       url: http://10.1.0.5/api/
       login: enbek.api
-      password: "12345678"
+      password: "qwerty1234"
       bin: "180541001869"
       interface-id: "C079003"
 
