@@ -1,0 +1,23 @@
+server:
+  port: 8080
+
+routes:
+  routes:
+    service-a:
+      url: https://demo5.simbase.eu/api/
+      login: ts7.api
+      password: "12345678"           # в открытом виде, хешируется SHA3-512 перед отправкой
+      iins:
+        - "920929300914"
+        - "111111111111"
+
+    service-b:
+      url: https://service-b.example.com/api
+      login: ts8.api2
+      password: "another-secret"
+      iins:
+        - "222222222222"
+
+logging:
+  level:
+    com.example.router: DEBUG
