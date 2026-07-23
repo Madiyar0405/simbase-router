@@ -29,6 +29,7 @@ import java.util.concurrent.atomic.AtomicLong;
 @Component
 public class SbApiEnvelopeBuilder {
 
+
     private static final DateTimeFormatter CREATED_FORMATTER =
             DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'").withZone(java.time.ZoneOffset.UTC);
 
@@ -80,7 +81,7 @@ public class SbApiEnvelopeBuilder {
      *                    экранирование под конкретный формат делается заранее вызывающей стороной.
      */
     public record BuildRequest(
-            long interfaceId,
+            int interfaceId,
             int version,
             long msgId,
             String msgType,

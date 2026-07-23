@@ -40,7 +40,8 @@ public class IngressController {
 
     // Настройки interface id/version для формирования исходящего сообщения.
     // При необходимости вынесите в application.yml (interfaceId/version не зависят от маршрута).
-    private static final long INTERFACE_ID = 218124291L;
+
+//    private static final long INTERFACE_ID = 218124291L;
     private static final int INTERFACE_VERSION = 8;
     private static final String MSG_TYPE = "5000";
 
@@ -68,9 +69,9 @@ public class IngressController {
         String innerXml = nestedPayloadExtractor.extractDataElementText(outerDoc);
 
         // 2. Парсим вложенный XML отдельно и достаём ИИН
-        String iin = nestedPayloadExtractor.extractIin(innerXml);
+        String bin = nestedPayloadExtractor.extractBin(innerXml);
         // 3. Находим маршрут по ИИН (routes.*.iins в application.yml)
-        RoutingService.RouteMatch match = routingService.resolveRouteByIin(iin);
+        RoutingService.RouteMatch match = routingService.resolveRouteByIin(bin);
         RoutesProperties.RouteConfig cfg = match.config();
 
         // TODO: уточнить окончательно, что должно быть в arg[data] —
@@ -79,9 +80,12 @@ public class IngressController {
         // (cvRecruit) как есть, экранированный под текст. Замените здесь,
         // если нужен другой формат (JSON и т.п.).
         String dataPayload = escapeForXmlText(innerXml);
-
+        System.out.println(cfg.getUrl());
+        System.out.println(cfg.getLogin());
+        System.out.println(cfg.getInterfaceId());
         SbApiEnvelopeBuilder.BuildRequest buildRequest = new SbApiEnvelopeBuilder.BuildRequest(
-                INTERFACE_ID,
+
+                Integer.parseInt(cfg.getInterfaceId(), 16),
                 INTERFACE_VERSION,
                 envelopeBuilder.nextMsgId(),
                 MSG_TYPE,
@@ -91,8 +95,9 @@ public class IngressController {
                 dataPayload
         );
 
-        String outgoingXml = envelopeBuilder.build(buildRequest);
 
+        String outgoingXml = envelopeBuilder.build(buildRequest);
+        System.out.println(outgoingXml);
         ResponseEntity<String> downstreamResponse = outboundClient.send(cfg.getUrl(), outgoingXml);
 
         return ResponseEntity.status(HttpStatus.OK)

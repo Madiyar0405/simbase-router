@@ -46,7 +46,7 @@ public class RoutingService {
 
         for (Map.Entry<String, RoutesProperties.RouteConfig> entry : routes.entrySet()) {
             RoutesProperties.RouteConfig cfg = entry.getValue();
-            if (cfg.getIins() != null && cfg.getIins().contains(iin)) {
+            if (cfg.getBin() != null && cfg.getBin().contains(iin)) {
                 return new RouteMatch(entry.getKey(), cfg);
             }
         }

@@ -16,6 +16,7 @@ import java.util.Map;
  *     password: real-secret
  *     matchXpath: /sbapi/header/message/@type
  *     matchValue: "5000"
+ *     interfaceId: "11111"
  */
 @ConfigurationProperties(prefix = "routes")
 public class RoutesProperties {
@@ -42,7 +43,9 @@ public class RoutesProperties {
         /** Значение, с которым сравнивается результат matchXpath (опционально) */
         private String matchValue;
         /** Список конкретных ИИН, для которых сообщение направляется на этот маршрут */
-        private List<String> iins;
+        private List<String> bin;
+        /** InterfaceId системы Simbase, для которых сообщение направляется на этот маршрут */
+        private String interfaceId ;
 
         public String getUrl() {
             return url;
@@ -84,12 +87,20 @@ public class RoutesProperties {
             this.matchValue = matchValue;
         }
 
-        public List<String> getIins() {
-            return iins;
+        public List<String> getBin() {
+            return bin;
         }
 
-        public void setIins(List<String> iins) {
-            this.iins = iins;
+        public void setBin(List<String> bin) {
+            this.bin = bin;
+        }
+
+        public String getInterfaceId() {
+            return interfaceId;
+        }
+
+        public void setInterfaceId(String interfaceId) {
+            this.interfaceId = interfaceId;
         }
     }
 }

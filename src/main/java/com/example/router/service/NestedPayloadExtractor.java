@@ -58,15 +58,15 @@ public class NestedPayloadExtractor {
      * Парсит вложенный XML (содержимое <data>) как отдельный документ
      * и достаёт из него ИИН (первый попавшийся элемент <iin> по local-name).
      */
-    public String extractIin(String innerXml) {
+    public String extractBin(String innerXml) {
         try {
             DocumentBuilder builder = factory.newDocumentBuilder();
             Document innerDoc = builder.parse(new InputSource(new StringReader(innerXml)));
-            String iin = (String) xPath.evaluate("//*[local-name()='iin']", innerDoc, XPathConstants.STRING);
-            if (iin == null || iin.isBlank()) {
-                throw new IllegalArgumentException("Элемент <iin> не найден во вложенном XML");
+            String bin = (String) xPath.evaluate("//*[local-name()='bin']", innerDoc, XPathConstants.STRING);
+            if (bin == null || bin.isBlank()) {
+                throw new IllegalArgumentException("Элемент <bin> не найден во вложенном XML");
             }
-            return iin.trim();
+            return bin.trim();
         } catch (Exception e) {
             throw new IllegalArgumentException("Ошибка парсинга вложенного XML из <data>", e);
         }
