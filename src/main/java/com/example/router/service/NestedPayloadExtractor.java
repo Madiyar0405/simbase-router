@@ -1,5 +1,7 @@
 package com.example.router.service;
 
+import com.example.router.model.Candidate;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Component;
 import org.w3c.dom.Document;
 import org.xml.sax.InputSource;
@@ -10,13 +12,15 @@ import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathFactory;
 import java.io.StringReader;
+import java.time.OffsetDateTime;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Входящее сообщение — SOAP-конверт (SendMessage), внутри которого
  * в элементе <data> (requestData/data) лежит ВЛОЖЕННЫЙ XML-документ
  * (например <cvRecruit>...), обычно обёрнутый в CDATA, со своим ИИН
  * в <cv><iin>.
- *
  * Это отдельный, самостоятельный XML-документ внутри текстового
  * содержимого <data> — поэтому его нужно парсить второй раз, отдельно
  * от внешнего SOAP-документа.
@@ -70,5 +74,40 @@ public class NestedPayloadExtractor {
         } catch (Exception e) {
             throw new IllegalArgumentException("Ошибка парсинга вложенного XML из <data>", e);
         }
+    }
+
+    public String extractCandidateDataAndParseJson(String dataPayload){
+        try {
+            DocumentBuilder builder = factory.newDocumentBuilder();
+            Document innerDoc = builder.parse(new InputSource(new StringReader(dataPayload)));
+
+
+
+            Candidate candidate = new Candidate(
+                    (String) xPath.evaluate("//*[local-name()='lastName']", innerDoc, XPathConstants.STRING),
+                     (String) xPath.evaluate("//*[local-name()='firstName']", innerDoc, XPathConstants.STRING),
+                     (String) xPath.evaluate("//*[local-name()='parentName']", innerDoc, XPathConstants.STRING),
+                     (String) xPath.evaluate("//*[local-name()='email']", innerDoc, XPathConstants.STRING),
+                     (String) xPath.evaluate("//*[local-name()='mobile']", innerDoc, XPathConstants.STRING),
+                     (String) xPath.evaluate("//*[local-name()='experience']", innerDoc, XPathConstants.STRING),
+                     (String) xPath.evaluate("//*[local-name()='desiredSalary']", innerDoc, XPathConstants.STRING),
+                    (String) xPath.evaluate("//*[local-name()='consentRelocate']", innerDoc, XPathConstants.STRING),
+                     (String) xPath.evaluate("//*[local-name()='consentWork']", innerDoc, XPathConstants.STRING),
+                     (String) xPath.evaluate("//*[local-name()='dateBirth']", innerDoc, XPathConstants.STRING),
+                     (String) xPath.evaluate("//*[local-name()='bDate']", innerDoc, XPathConstants.STRING),
+                    (String) xPath.evaluate("//*[local-name()='eDate']", innerDoc, XPathConstants.STRING),
+                     (String) xPath.evaluate("//*[local-name()='dateCreate']", innerDoc, XPathConstants.STRING),
+                    (String) xPath.evaluate("//*[local-name()='msgDate']", innerDoc, XPathConstants.STRING));
+            ObjectMapper mapper = new ObjectMapper();
+
+            return mapper.writeValueAsString(candidate);
+        }
+
+        catch (Exception e) {
+                throw new IllegalArgumentException("Ошибка парсинга вложенного1111 XML из <data>", e);
+
+
+        }
+
     }
 }

@@ -58,7 +58,7 @@ public class SbApiEnvelopeBuilder {
                 + "<error id=\"0\"/>"
                 + "<auth pwd=\"hash\">%s</auth>".formatted(authDataBase64)
                 + "</header><body>"
-                + "<function name=\"f_send_msg\"><arg name=\"data\">%s</arg></function>".formatted(req.dataPayload())
+                + "<function name=\"f_send_msg\"><arg name=\"data\">%s</arg></function>".formatted(req.dataIntoJson())
                 + "</body></sbapi>";
     }
 
@@ -77,7 +77,7 @@ public class SbApiEnvelopeBuilder {
     /**
      * Данные для сборки конверта.
      *
-     * @param dataPayload содержимое arg[data] — уже готовая строка (JSON/XML/текст),
+     * @param dataIntoJson содержимое arg[data] — уже готовая строка (JSON/XML/текст),
      *                    экранирование под конкретный формат делается заранее вызывающей стороной.
      */
     public record BuildRequest(
@@ -88,6 +88,6 @@ public class SbApiEnvelopeBuilder {
             String login,
             String password,
             String userIp,
-            String dataPayload
+            String dataIntoJson
     ) {}
 }

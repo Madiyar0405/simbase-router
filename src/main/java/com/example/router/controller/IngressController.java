@@ -27,7 +27,7 @@ import java.nio.charset.StandardCharsets;
  *   <![CDATA[ <cvRecruit><cv><iin>...</iin></cv></cvRecruit> ]]>
  * </data>...
  *
- * Извлекает ИИН из вложенного XML внутри <data> и по нему определяет,
+ * Извлекает БИН из вложенного XML внутри <data> и по нему определяет,
  * в какой downstream-сервис отправить итоговый sbapi-конверт.
  */
 @RestController
@@ -38,17 +38,13 @@ public class IngressController {
     private final SbApiEnvelopeBuilder envelopeBuilder;
     private final OutboundClient outboundClient;
 
-    // Настройки interface id/version для формирования исходящего сообщения.
-    // При необходимости вынесите в application.yml (interfaceId/version не зависят от маршрута).
-
-//    private static final long INTERFACE_ID = 218124291L;
     private static final int INTERFACE_VERSION = 8;
     private static final String MSG_TYPE = "5000";
 
     public IngressController(NestedPayloadExtractor nestedPayloadExtractor,
-                              RoutingService routingService,
-                              SbApiEnvelopeBuilder envelopeBuilder,
-                              OutboundClient outboundClient) {
+                             RoutingService routingService,
+                             SbApiEnvelopeBuilder envelopeBuilder,
+                             OutboundClient outboundClient) {
         this.nestedPayloadExtractor = nestedPayloadExtractor;
         this.routingService = routingService;
         this.envelopeBuilder = envelopeBuilder;
@@ -79,10 +75,8 @@ public class IngressController {
         // что намекает на JSON, а не сырой XML. Пока кладём вложенный XML
         // (cvRecruit) как есть, экранированный под текст. Замените здесь,
         // если нужен другой формат (JSON и т.п.).
-        String dataPayload = escapeForXmlText(innerXml);
-        System.out.println(cfg.getUrl());
-        System.out.println(cfg.getLogin());
-        System.out.println(cfg.getInterfaceId());
+
+        String dataIntoJson = nestedPayloadExtractor.extractCandidateDataAndParseJson(innerXml);
         SbApiEnvelopeBuilder.BuildRequest buildRequest = new SbApiEnvelopeBuilder.BuildRequest(
 
                 Integer.parseInt(cfg.getInterfaceId(), 16),
@@ -92,12 +86,12 @@ public class IngressController {
                 cfg.getLogin(),
                 cfg.getPassword(),
                 normalizeIp(request.getRemoteAddr()),
-                dataPayload
+                dataIntoJson
         );
 
 
         String outgoingXml = envelopeBuilder.build(buildRequest);
-        System.out.println(outgoingXml);
+
         ResponseEntity<String> downstreamResponse = outboundClient.send(cfg.getUrl(), outgoingXml);
 
         return ResponseEntity.status(HttpStatus.OK)
