@@ -7,16 +7,14 @@ import java.util.Map;
 
 /**
  * Настройки маршрутов из application.yml (секция routes.*)
- *
  * Пример:
- * routes:
- *   service-a:
- *     url: https://service-a.example.com/api
- *     login: ts8.api
- *     password: real-secret
- *     matchXpath: /sbapi/header/message/@type
- *     matchValue: "5000"
- *     interfaceId: "11111"
+ *  comp-747944: # Филиал по области Ұлытау
+ *  url: https://demo5.simbase.eu/api/
+ *  login: ts7.api
+ *  password: "12345678"
+ *  bin: "220641027053"
+ *  interface-id: "D005003"
+ *  system-code: "GFCB20"
  */
 @ConfigurationProperties(prefix = "routes")
 public class RoutesProperties {
@@ -42,10 +40,12 @@ public class RoutesProperties {
         private String matchXpath;
         /** Значение, с которым сравнивается результат matchXpath (опционально) */
         private String matchValue;
-        /** Список конкретных ИИН, для которых сообщение направляется на этот маршрут */
+        /** Список конкретных БИН, для которых сообщение направляется на этот маршрут */
         private List<String> bin;
         /** InterfaceId системы Simbase, для которых сообщение направляется на этот маршрут */
         private String interfaceId ;
+        /** Системный код системы SimBASE*/
+        private String systemCode;
 
         public String getUrl() {
             return url;
@@ -101,6 +101,14 @@ public class RoutesProperties {
 
         public void setInterfaceId(String interfaceId) {
             this.interfaceId = interfaceId;
+        }
+
+        public String getSystemCode() {
+            return systemCode;
+        }
+
+        public void setSystemCode(String systemCode) {
+            this.systemCode = systemCode;
         }
     }
 }

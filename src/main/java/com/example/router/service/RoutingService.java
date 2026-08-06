@@ -38,7 +38,7 @@ public class RoutingService {
      * Ищет маршрут, в чьём списке routes.*.iins встречается переданный ИИН
      * (точное совпадение строки).
      */
-    public RouteMatch resolveRouteByIin(String iin) {
+    public RouteMatch resolveRouteBySystemCode(String systemCode) {
         Map<String, RoutesProperties.RouteConfig> routes = routesProperties.getRoutes();
         if (routes == null || routes.isEmpty()) {
             throw new IllegalStateException("Маршруты не сконфигурированы (routes.*)");
@@ -46,12 +46,12 @@ public class RoutingService {
 
         for (Map.Entry<String, RoutesProperties.RouteConfig> entry : routes.entrySet()) {
             RoutesProperties.RouteConfig cfg = entry.getValue();
-            if (cfg.getBin() != null && cfg.getBin().contains(iin)) {
+            if (cfg.getSystemCode() != null && cfg.getSystemCode().contains(systemCode)) {
                 return new RouteMatch(entry.getKey(), cfg);
             }
         }
 
-        throw new NoRouteFoundException("Не найден маршрут для ИИН " + iin);
+        throw new NoRouteFoundException("Не найден маршрут для ИИН " + systemCode);
     }
 
     public RouteMatch resolveRoute(Document doc) {

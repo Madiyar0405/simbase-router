@@ -1,10 +1,7 @@
 package com.example.router.controller;
 
 import com.example.router.config.RoutesProperties;
-import com.example.router.service.NestedPayloadExtractor;
-import com.example.router.service.OutboundClient;
-import com.example.router.service.RoutingService;
-import com.example.router.service.SbApiEnvelopeBuilder;
+import com.example.router.service.*;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -19,6 +16,7 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
+import java.sql.SQLOutput;
 
 /**
  * Принимает SOAP-конверт вида:
@@ -37,6 +35,7 @@ public class IngressController {
     private final RoutingService routingService;
     private final SbApiEnvelopeBuilder envelopeBuilder;
     private final OutboundClient outboundClient;
+    private final IncomingAuthService incomingAuthService;
 
     private static final int INTERFACE_VERSION = 8;
     private static final String MSG_TYPE = "5000";
@@ -44,11 +43,13 @@ public class IngressController {
     public IngressController(NestedPayloadExtractor nestedPayloadExtractor,
                              RoutingService routingService,
                              SbApiEnvelopeBuilder envelopeBuilder,
-                             OutboundClient outboundClient) {
+                             OutboundClient outboundClient,
+                             IncomingAuthService incomingAuthService) {
         this.nestedPayloadExtractor = nestedPayloadExtractor;
         this.routingService = routingService;
         this.envelopeBuilder = envelopeBuilder;
         this.outboundClient = outboundClient;
+        this.incomingAuthService = incomingAuthService;
     }
 
     @PostMapping(value = "/route", consumes = MediaType.APPLICATION_XML_VALUE)
@@ -58,23 +59,22 @@ public class IngressController {
         // Spring'ом по Content-Type (без явного charset может уйти в ISO-8859-1
         // и испортить кириллицу).
         String incomingXml = new String(incomingBytes, StandardCharsets.UTF_8);
-
         Document outerDoc = parseXml(incomingXml);
-
+        String senderId = nestedPayloadExtractor.extractLogin(outerDoc);
+        String password = nestedPayloadExtractor.extractPassword(outerDoc);
+        boolean ok = incomingAuthService.isAuthorized(senderId, password);
         // 1. Достаём текст элемента <data> (обычно CDATA с вложенным XML)
         String innerXml = nestedPayloadExtractor.extractDataElementText(outerDoc);
 
-        // 2. Парсим вложенный XML отдельно и достаём ИИН
-        String bin = nestedPayloadExtractor.extractBin(innerXml);
+        // 2. Парсим вложенный XML отдельно и достаём Бизнес код
+        String systemCode = nestedPayloadExtractor.extractSystemCode(innerXml);
         // 3. Находим маршрут по ИИН (routes.*.iins в application.yml)
-        RoutingService.RouteMatch match = routingService.resolveRouteByIin(bin);
+        RoutingService.RouteMatch match = routingService.resolveRouteBySystemCode(systemCode);
+
+
         RoutesProperties.RouteConfig cfg = match.config();
 
-        // TODO: уточнить окончательно, что должно быть в arg[data] —
-        // в референсном скрипте переменная называется $json и содержит "{}",
-        // что намекает на JSON, а не сырой XML. Пока кладём вложенный XML
-        // (cvRecruit) как есть, экранированный под текст. Замените здесь,
-        // если нужен другой формат (JSON и т.п.).
+
 
         String dataIntoJson = nestedPayloadExtractor.extractCandidateDataAndParseJson(innerXml);
         SbApiEnvelopeBuilder.BuildRequest buildRequest = new SbApiEnvelopeBuilder.BuildRequest(

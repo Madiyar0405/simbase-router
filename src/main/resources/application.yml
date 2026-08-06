@@ -11,11 +11,12 @@ routes:
       interface-id: "C070003"
 
     comp-747944: # Филиал по области Ұлытау
-      url: http://10.1.0.26/api/
-      login: enbek.api
-      password: "qwerty1234"
+      url: https://demo5.simbase.eu/api/
+      login: ts7.api
+      password: "12345678"
       bin: "220641027053"
-      interface-id: "C09B003"
+      interface-id: "D005003"
+      system-code: "GFCB20"
 
     comp-747943: # Филиал по области Жетісу
       url: http://10.1.0.17/api/
@@ -23,6 +24,7 @@ routes:
       password: "qwerty1234"
       bin: "220641027192"
       interface-id: "C09A003"
+      system-code: "GFCB19"
 
     comp-747942: # Филиал по области Абай
       url: http://10.1.0.8/api/
@@ -30,6 +32,7 @@ routes:
       password: "qwerty1234"
       bin: "220641025671"
       interface-id: "C099003"
+      system-code: "GFCB18"
 
     comp-570: # Аппарат Правления Общества
       url: http://10.1.0.4/api/
@@ -37,6 +40,7 @@ routes:
       password: "qwerty1234"
       bin: "160440007161"
       interface-id: "C065003"
+      system-code: "GFC"
 
     comp-569: # Центральный филиал Общества по координации деятельности социального и пенсионного обеспечения
       url: http://10.1.0.4/api/
@@ -44,6 +48,7 @@ routes:
       password: "qwerty1234"
       bin: "160440007161"
       interface-id: "C065003"
+      system-code: "GFC"
 
     comp-217: # Филиал по государственному учету земель и земельно-кадастровых работ
       url: http://10.1.0.27/api/
@@ -51,6 +56,7 @@ routes:
       password: "qwerty1234"
       bin: "160741009481"
       interface-id: "C09C003"
+      system-code: "GFCB21"
 
     comp-216: # Филиал по Туркестанской области
       url: http://10.1.0.25/api/
@@ -58,6 +64,7 @@ routes:
       password: "qwerty1234"
       bin: "180541003290"
       interface-id: "C094003"
+      system-code: "GFCB13"
 
     comp-215: # Филиал по Северо-Казахстанской области
       url: http://10.1.0.24/api/
@@ -65,6 +72,7 @@ routes:
       password: "qwerty1234"
       bin: "180541003378"
       interface-id: "C096003"
+      system-code: "GFCB15"
 
     comp-214: # Филиал по Павлодарской области
       url: http://10.1.0.23/api/
@@ -72,6 +80,7 @@ routes:
       password: "qwerty1234"
       bin: "180541002837"
       interface-id: "C095003"
+      system-code: "GFCB14"
 
     comp-213: # Филиал по Мангистауской области
       url: http://10.1.0.22/api/
@@ -79,6 +88,7 @@ routes:
       password: "qwerty1234"
       bin: "180541002519"
       interface-id: "C093003"
+      system-code: "GFCB12"
 
     comp-212: # Филиал по Кызылординской области
       url: http://10.1.0.21/api/
@@ -86,6 +96,7 @@ routes:
       password: "qwerty1234"
       bin: "180541003111"
       interface-id: "C092003"
+      system-code: "GFCB11"
 
     comp-211: # Филиал по Костанайской области
       url: http://10.1.0.20/api/
@@ -93,6 +104,7 @@ routes:
       password: "qwerty1234"
       bin: "180541002758"
       interface-id: "C091003"
+      system-code: "GFCB10"
 
     comp-210: # Филиал по Карагандинской области
       url: http://10.1.0.19/api/
@@ -100,6 +112,7 @@ routes:
       password: "qwerty1234"
       bin: "180541000305"
       interface-id: "C090003"
+      system-code: "GFCB09"
 
     comp-209: # Филиал по Западно-Казахстанской области
       url: http://10.1.0.18/api/
@@ -107,6 +120,7 @@ routes:
       password: "qwerty1234"
       bin: "180541002410"
       interface-id: "C08E003"
+      system-code: "GFCB07"
 
     comp-208: # Филиал по Жамбылской области
       url: http://10.1.0.16/api/
@@ -114,6 +128,7 @@ routes:
       password: "qwerty1234"
       bin: "180541001204"
       interface-id: "C08F003"
+      system-code: "GFCB08"
 
     comp-207: # Филиал по Восточно-Казахстанской области
       url: http://10.1.0.15/api/
@@ -121,6 +136,7 @@ routes:
       password: "qwerty1234"
       bin: "180541001294"
       interface-id: "C097003"
+      system-code: "GFCB16"
 
     comp-206: # Филиал по Атырауской области
       url: http://10.1.0.14/api/
@@ -128,6 +144,7 @@ routes:
       password: "qwerty1234"
       bin: "180541002986"
       interface-id: "C08D003"
+      system-code: "GFCB06"
 
     comp-205: # Филиал по Алматинской области
       url: http://10.1.0.13/api/
@@ -135,6 +152,7 @@ routes:
       password: "qwerty1234"
       bin: "180541000612"
       interface-id: "C08C003"
+      system-code: "GFCB05"
 
     comp-204: # Филиал по Актюбинской области
       url: http://10.1.0.12/api/
@@ -142,6 +160,7 @@ routes:
       password: "qwerty1234"
       bin: "180541001918"
       interface-id: "C08B003"
+      system-code: "GFCB04"
 
     comp-203: # Филиал по Акмолинской области
       url: http://10.1.0.9/api/
@@ -149,6 +168,7 @@ routes:
       password: "qwerty1234"
       bin: "180541001313"
       interface-id: "C08A003"
+      system-code: "GFCB03"
 
     comp-202: # Филиал по городу Шымкент
       url: http://10.1.0.7/api/
@@ -156,6 +176,7 @@ routes:
       password: "qwerty1234"
       bin: "180941014697"
       interface-id: "C098003"
+      system-code: "GFCB17"
 
     comp-201: # Филиал по городу Алматы
       url: http://10.1.0.6/api/
@@ -163,13 +184,19 @@ routes:
       password: "qwerty1234"
       bin: "180541001958"
       interface-id: "C089003"
+      system-code: "GFCB02"
 
     comp-200: # Филиал по городу Астана
-      url: http://10.1.0.5/api/
-      login: enbek.api
-      password: "qwerty1234"
+      url: https://demo5.simbase.eu/api/
+      login: ts7.api
+      password: "12345678"
       bin: "180541001869"
-      interface-id: "C079003"
+      interface-id: "D005003"
+      system-code: "GFCB01"
+
+incoming-auth:
+  sender-id: bpmgov4c22
+  password: bpmgov4c22!
 
 logging:
   level:
