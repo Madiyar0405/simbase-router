@@ -187,11 +187,11 @@ routes:
       system-code: "GFCB02"
 
     comp-200: # Филиал по городу Астана
-      url: https://demo5.simbase.eu/api/
-      login: ts7.api
-      password: "12345678"
+      url: http://10.1.0.5/api/
+      login: enbek.api
+      password: "qwerty1234"
       bin: "180541001869"
-      interface-id: "D005003"
+      interface-id: "C079003"
       system-code: "GFCB01"
 
 incoming-auth:
