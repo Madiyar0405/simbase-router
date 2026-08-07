@@ -70,7 +70,7 @@ public class IngressController {
         String systemCode = nestedPayloadExtractor.extractSystemCode(innerXml);
         // 3. Находим маршрут по ИИН (routes.*.iins в application.yml)
         RoutingService.RouteMatch match = routingService.resolveRouteBySystemCode(systemCode);
-
+        System.out.println(match);
 
         RoutesProperties.RouteConfig cfg = match.config();
 

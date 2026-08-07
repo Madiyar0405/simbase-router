@@ -11,11 +11,11 @@ routes:
       interface-id: "C070003"
 
     comp-747944: # Филиал по области Ұлытау
-      url: https://demo5.simbase.eu/api/
-      login: ts7.api
-      password: "12345678"
+      url: http://10.1.0.26/api/
+      login: enbek.api
+      password: "qwerty1234"
       bin: "220641027053"
-      interface-id: "D005003"
+      interface-id: "C09B003"
       system-code: "GFCB20"
 
     comp-747943: # Филиал по области Жетісу

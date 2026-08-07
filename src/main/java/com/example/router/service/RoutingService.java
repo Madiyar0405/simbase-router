@@ -40,18 +40,32 @@ public class RoutingService {
      */
     public RouteMatch resolveRouteBySystemCode(String systemCode) {
         Map<String, RoutesProperties.RouteConfig> routes = routesProperties.getRoutes();
+
+        if (systemCode == null || systemCode.isBlank()) {
+            throw new IllegalArgumentException("SystemCode не может быть пустым");
+        }
+
         if (routes == null || routes.isEmpty()) {
-            throw new IllegalStateException("Маршруты не сконфигурированы (routes.*)");
+            throw new IllegalStateException(
+                    "Маршруты не сконфигурированы (routes.*)"
+            );
         }
 
         for (Map.Entry<String, RoutesProperties.RouteConfig> entry : routes.entrySet()) {
             RoutesProperties.RouteConfig cfg = entry.getValue();
-            if (cfg.getSystemCode() != null && cfg.getSystemCode().contains(systemCode)) {
+
+            if (cfg == null || cfg.getSystemCode() == null) {
+                continue;
+            }
+
+            if (cfg.getSystemCode().equals(systemCode)) {
                 return new RouteMatch(entry.getKey(), cfg);
             }
         }
 
-        throw new NoRouteFoundException("Не найден маршрут для ИИН " + systemCode);
+        throw new NoRouteFoundException(
+                "Не найден маршрут для системного кода: " + systemCode
+        );
     }
 
     public RouteMatch resolveRoute(Document doc) {
