@@ -3,12 +3,14 @@ server:
 
 routes:
   routes:
+
     comp-973453: # Тестовая среда для разработки
       url: http://10.1.0.3/api/
       login: enbek.api
       password: "qwerty1234"
       bin: null
       interface-id: "C070003"
+      system-code: "GFCDEV"
 
     comp-747944: # Филиал по области Ұлытау
       url: http://10.1.0.26/api/
