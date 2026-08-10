@@ -5,9 +5,18 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 
 @ConfigurationProperties(prefix = "incoming-auth")
 public class IncomingAuthProperties {
+    private String serviceId;
     private String senderId;
     private String password;
 
+
+    public String getServiceId() {
+        return serviceId;
+    }
+
+    public void setServiceId(String serviceId) {
+        this.serviceId = serviceId;
+    }
 
     public String getSenderId() {
         return senderId;

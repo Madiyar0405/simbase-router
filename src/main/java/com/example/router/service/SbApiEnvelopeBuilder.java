@@ -58,7 +58,7 @@ public class SbApiEnvelopeBuilder {
                 + "<error id=\"0\"/>"
                 + "<auth pwd=\"hash\">%s</auth>".formatted(authDataBase64)
                 + "</header><body>"
-                + "<function name=\"f_send_msg\"><arg name=\"data\">%s</arg></function>".formatted(req.dataIntoJson())
+                + "<function name=\"f_send_msg\"><arg name=\"data\">%s</arg></function>".formatted(escape(req.dataIntoJson()))
                 + "</body></sbapi>";
     }
 

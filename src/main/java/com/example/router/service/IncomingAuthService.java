@@ -16,7 +16,17 @@ public class IncomingAuthService{
         this.incomingAuthProperties = incomingAuthProperties;
     }
 
-    public boolean isAuthorized(String actualSenderId,
+    public void isServiceIdCorrect(String actualServiceId){
+
+        boolean serviceOk = MessageDigest.isEqual(
+                incomingAuthProperties.getServiceId().getBytes(StandardCharsets.UTF_8),
+                actualServiceId.getBytes(StandardCharsets.UTF_8));
+        if (!serviceOk) {
+            throw new IllegalArgumentException("Неверный serviceId.");
+        }
+    }
+
+    public void isAuthorized(String actualSenderId,
                                 String actualPassword) {
 
         boolean senderOk = MessageDigest.isEqual(
@@ -31,7 +41,6 @@ public class IncomingAuthService{
             throw new IllegalArgumentException("Авторизация не выполнена: неверный senderId или пароль.");
         }
 
-        return true;
     }
 
 }

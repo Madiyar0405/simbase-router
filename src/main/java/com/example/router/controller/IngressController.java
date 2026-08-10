@@ -62,7 +62,14 @@ public class IngressController {
         Document outerDoc = parseXml(incomingXml);
         String senderId = nestedPayloadExtractor.extractLogin(outerDoc);
         String password = nestedPayloadExtractor.extractPassword(outerDoc);
-        boolean ok = incomingAuthService.isAuthorized(senderId, password);
+        String serviceId = nestedPayloadExtractor.extractServiceId(outerDoc);
+
+
+
+        // Проверка на авторизацию и senderId
+        incomingAuthService.isAuthorized(senderId, password);
+        incomingAuthService.isServiceIdCorrect(serviceId);
+
         // 1. Достаём текст элемента <data> (обычно CDATA с вложенным XML)
         String innerXml = nestedPayloadExtractor.extractDataElementText(outerDoc);
 

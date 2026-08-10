@@ -197,6 +197,7 @@ routes:
       system-code: "GFCB01"
 
 incoming-auth:
+  service-id: SIMBASE_ROUTER_SERVICE
   sender-id: bpmgov4c22
   password: bpmgov4c22!
 
