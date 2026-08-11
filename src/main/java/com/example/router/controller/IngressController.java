@@ -55,37 +55,23 @@ public class IngressController {
     @PostMapping(value = "/route", consumes = MediaType.APPLICATION_XML_VALUE)
     public ResponseEntity<String> route(@RequestBody byte[] incomingBytes, HttpServletRequest request) {
 
-        // Явно декодируем как UTF-8, не полагаясь на автоопределение charset
-        // Spring'ом по Content-Type (без явного charset может уйти в ISO-8859-1
-        // и испортить кириллицу).
         String incomingXml = new String(incomingBytes, StandardCharsets.UTF_8);
         Document outerDoc = parseXml(incomingXml);
         String senderId = nestedPayloadExtractor.extractLogin(outerDoc);
         String password = nestedPayloadExtractor.extractPassword(outerDoc);
         String serviceId = nestedPayloadExtractor.extractServiceId(outerDoc);
 
-
-
-        // Проверка на авторизацию и senderId
         incomingAuthService.isAuthorized(senderId, password);
         incomingAuthService.isServiceIdCorrect(serviceId);
 
-        // 1. Достаём текст элемента <data> (обычно CDATA с вложенным XML)
         String innerXml = nestedPayloadExtractor.extractDataElementText(outerDoc);
-
-        // 2. Парсим вложенный XML отдельно и достаём Бизнес код
         String systemCode = nestedPayloadExtractor.extractSystemCode(innerXml);
-        // 3. Находим маршрут по ИИН (routes.*.iins в application.yml)
         RoutingService.RouteMatch match = routingService.resolveRouteBySystemCode(systemCode);
-        System.out.println(match);
 
         RoutesProperties.RouteConfig cfg = match.config();
 
-
-
         String dataIntoJson = nestedPayloadExtractor.extractCandidateDataAndParseJson(innerXml);
         SbApiEnvelopeBuilder.BuildRequest buildRequest = new SbApiEnvelopeBuilder.BuildRequest(
-
                 Integer.parseInt(cfg.getInterfaceId(), 16),
                 INTERFACE_VERSION,
                 envelopeBuilder.nextMsgId(),
@@ -96,14 +82,41 @@ public class IngressController {
                 dataIntoJson
         );
 
-
         String outgoingXml = envelopeBuilder.build(buildRequest);
 
+        // === было раньше ===
+        // ResponseEntity<String> downstreamResponse = outboundClient.send(cfg.getUrl(), outgoingXml);
+        // return ResponseEntity.status(HttpStatus.OK)
+        //         .contentType(MediaType.APPLICATION_XML)
+        //         .body(downstreamResponse.getBody());
+
+        // === новый блок вместо него ===
         ResponseEntity<String> downstreamResponse = outboundClient.send(cfg.getUrl(), outgoingXml);
+
+        String errorId = nestedPayloadExtractor.extractErrorId(downstreamResponse.getBody());
+
+        String responseXml;
+        if ("0".equals(errorId)) {
+            responseXml = """
+                <?xml version="1.0" encoding="UTF-8"?>
+                <response>
+                    <status>OK</status>
+                    <message>Сообщение успешно принято</message>
+                </response>
+                """;
+        } else {
+            responseXml = """
+                <?xml version="1.0" encoding="UTF-8"?>
+                <response>
+                    <status>ERROR</status>
+                    <message>Downstream-система вернула ошибку, код: %s</message>
+                </response>
+                """.formatted(escapeForXmlText(errorId));
+        }
 
         return ResponseEntity.status(HttpStatus.OK)
                 .contentType(MediaType.APPLICATION_XML)
-                .body(downstreamResponse.getBody());
+                .body(responseXml);
     }
 
     private Document parseXml(String xml) {

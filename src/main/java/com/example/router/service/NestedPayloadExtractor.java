@@ -100,7 +100,37 @@ public class NestedPayloadExtractor {
             );
         }
     }
+    public String extractErrorId(String responseXml) {
+        try {
+            if (responseXml == null || responseXml.isBlank()) {
+                throw new IllegalArgumentException("Пустой ответ от downstream-системы");
+            }
 
+            DocumentBuilder builder = factory.newDocumentBuilder();
+            Document doc = builder.parse(new InputSource(new StringReader(responseXml)));
+
+            String errorId = (String) xPath.evaluate(
+                    "//*[local-name()='error']/@id",
+                    doc,
+                    XPathConstants.STRING
+            );
+
+            if (errorId == null || errorId.isBlank()) {
+                throw new IllegalArgumentException(
+                        "Элемент <error id=\"...\"/> отсутствует в ответе downstream-системы"
+                );
+            }
+
+            return errorId.trim();
+
+        } catch (IllegalArgumentException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new IllegalArgumentException(
+                    "Не удалось разобрать ответ downstream-системы", e
+            );
+        }
+    }
     /**
      * Извлекает password из внешнего SOAP XML.
      */
