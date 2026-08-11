@@ -16,7 +16,6 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
-import java.sql.SQLOutput;
 
 /**
  * Принимает SOAP-конверт вида:
@@ -25,8 +24,10 @@ import java.sql.SQLOutput;
  *   <![CDATA[ <cvRecruit><cv><iin>...</iin></cv></cvRecruit> ]]>
  * </data>...
  *
- * Извлекает БИН из вложенного XML внутри <data> и по нему определяет,
- * в какой downstream-сервис отправить итоговый sbapi-конверт.
+ * Извлекает системный код из вложенного XML внутри <data> и по нему
+ * определяет, в какой downstream-сервис отправить итоговый sbapi-конверт.
+ * В ответ клиенту возвращает собственный SOAP-конверт-подтверждение
+ * (SendMessageResponse), а не транзитом ответ downstream-системы.
  */
 @RestController
 public class IngressController {
@@ -55,19 +56,28 @@ public class IngressController {
     @PostMapping(value = "/route", consumes = MediaType.APPLICATION_XML_VALUE)
     public ResponseEntity<String> route(@RequestBody byte[] incomingBytes, HttpServletRequest request) {
 
+        // Явно декодируем как UTF-8, не полагаясь на автоопределение charset
+        // Spring'ом по Content-Type (без явного charset может уйти в ISO-8859-1
+        // и испортить кириллицу).
         String incomingXml = new String(incomingBytes, StandardCharsets.UTF_8);
         Document outerDoc = parseXml(incomingXml);
         String senderId = nestedPayloadExtractor.extractLogin(outerDoc);
         String password = nestedPayloadExtractor.extractPassword(outerDoc);
         String serviceId = nestedPayloadExtractor.extractServiceId(outerDoc);
 
+        // Методы бросают исключение при неуспешной проверке,
+        // возвращаемое значение намеренно не используется.
         incomingAuthService.isAuthorized(senderId, password);
         incomingAuthService.isServiceIdCorrect(serviceId);
 
+        // 1. Достаём текст элемента <data> (обычно CDATA с вложенным XML)
         String innerXml = nestedPayloadExtractor.extractDataElementText(outerDoc);
-        String systemCode = nestedPayloadExtractor.extractSystemCode(innerXml);
-        RoutingService.RouteMatch match = routingService.resolveRouteBySystemCode(systemCode);
 
+        // 2. Парсим вложенный XML отдельно и достаём системный код
+        String systemCode = nestedPayloadExtractor.extractSystemCode(innerXml);
+
+        // 3. Находим маршрут по системному коду (routes.*.system-code в application.yml)
+        RoutingService.RouteMatch match = routingService.resolveRouteBySystemCode(systemCode);
         RoutesProperties.RouteConfig cfg = match.config();
 
         String dataIntoJson = nestedPayloadExtractor.extractCandidateDataAndParseJson(innerXml);
@@ -84,35 +94,15 @@ public class IngressController {
 
         String outgoingXml = envelopeBuilder.build(buildRequest);
 
-        // === было раньше ===
-        // ResponseEntity<String> downstreamResponse = outboundClient.send(cfg.getUrl(), outgoingXml);
-        // return ResponseEntity.status(HttpStatus.OK)
-        //         .contentType(MediaType.APPLICATION_XML)
-        //         .body(downstreamResponse.getBody());
-
-        // === новый блок вместо него ===
         ResponseEntity<String> downstreamResponse = outboundClient.send(cfg.getUrl(), outgoingXml);
 
+        // Проверяем <error id="..."/> в ответе downstream-системы:
+        // "0" — успех, любое другое значение — ошибка.
         String errorId = nestedPayloadExtractor.extractErrorId(downstreamResponse.getBody());
 
-        String responseXml;
-        if ("0".equals(errorId)) {
-            responseXml = """
-                <?xml version="1.0" encoding="UTF-8"?>
-                <response>
-                    <status>OK</status>
-                    <message>Сообщение успешно принято</message>
-                </response>
-                """;
-        } else {
-            responseXml = """
-                <?xml version="1.0" encoding="UTF-8"?>
-                <response>
-                    <status>ERROR</status>
-                    <message>Downstream-система вернула ошибку, код: %s</message>
-                </response>
-                """.formatted(escapeForXmlText(errorId));
-        }
+        String responseXml = "0".equals(errorId)
+                ? envelopeBuilder.buildAck("SUCCESS")
+                : envelopeBuilder.buildAck("ERROR");
 
         return ResponseEntity.status(HttpStatus.OK)
                 .contentType(MediaType.APPLICATION_XML)
@@ -130,12 +120,6 @@ public class IngressController {
         } catch (Exception e) {
             throw new IllegalArgumentException("Некорректный входящий XML", e);
         }
-    }
-
-    private String escapeForXmlText(String value) {
-        return value.replace("&", "&amp;")
-                .replace("<", "&lt;")
-                .replace(">", "&gt;");
     }
 
     /**
