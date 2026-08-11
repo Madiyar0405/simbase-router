@@ -4,9 +4,11 @@ import org.springframework.stereotype.Component;
 
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.Base64;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
@@ -28,7 +30,6 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 @Component
 public class SbApiEnvelopeBuilder {
-
 
     private static final DateTimeFormatter CREATED_FORMATTER =
             DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'").withZone(java.time.ZoneOffset.UTC);
@@ -54,12 +55,59 @@ public class SbApiEnvelopeBuilder {
                 + "<sbapi><header>"
                 + "<interface id=\"%d\" version=\"%d\"/>".formatted(req.interfaceId(), req.version())
                 + "<message id=\"%d\" ignore_id=\"yes\" type=\"%s\" created=\"%s\"/>"
-                        .formatted(req.msgId(), escape(req.msgType()), createdAt)
+                .formatted(req.msgId(), escape(req.msgType()), createdAt)
                 + "<error id=\"0\"/>"
                 + "<auth pwd=\"hash\">%s</auth>".formatted(authDataBase64)
                 + "</header><body>"
                 + "<function name=\"f_send_msg\"><arg name=\"data\">%s</arg></function>".formatted(escape(req.dataIntoJson()))
                 + "</body></sbapi>";
+    }
+
+    /**
+     * Формирует ответ клиенту в формате SOAP-конверта bip.bee.kz (SendMessageResponse).
+     * note — "SUCCESS" или "ERROR".
+     */
+    public String buildAck(String note) {
+        String messageId = UUID.randomUUID().toString();
+        String responseDate = DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(OffsetDateTime.now());
+
+        String statusCode = "SUCCESS".equals(note) ? "SCSS001" : "SERR001";
+        String statusMessage = "SUCCESS".equals(note)
+                ? "Message has been processed successfully"
+                : "Message processing failed";
+
+        return """
+                <?xml version="1.0" encoding="UTF-8"?>
+                <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ns1="http://bip.bee.kz/SyncChannel/v10/Types">
+                    <soap:Body>
+                        <ns1:SendMessageResponse>
+                            <response>
+                                <responseInfo>
+                                    <messageId>%s</messageId>
+                                    <responseDate>%s</responseDate>
+                                    <status>
+                                        <code>%s</code>
+                                        <message>%s</message>
+                                    </status>
+                                </responseInfo>
+                                <responseData>
+                                    <data>
+                                        <Note>%s</Note>
+                                        <DateEntry>%s</DateEntry>
+                                    </data>
+                                </responseData>
+                            </response>
+                        </ns1:SendMessageResponse>
+                    </soap:Body>
+                </soap:Envelope>
+                """.formatted(
+                messageId,
+                responseDate,
+                statusCode,
+                escape(statusMessage),
+                escape(note),
+                responseDate
+        );
     }
 
     public long nextMsgId() {
@@ -78,7 +126,7 @@ public class SbApiEnvelopeBuilder {
      * Данные для сборки конверта.
      *
      * @param dataIntoJson содержимое arg[data] — уже готовая строка (JSON/XML/текст),
-     *                    экранирование под конкретный формат делается заранее вызывающей стороной.
+     *                    экранирование под XML применяется внутри build().
      */
     public record BuildRequest(
             int interfaceId,
