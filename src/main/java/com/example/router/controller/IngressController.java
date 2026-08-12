@@ -49,7 +49,7 @@ public class IngressController {
     }
 
     @PostMapping(
-            value = "/route",
+            value = {"/route", "/route/test"},
             consumes = MediaType.APPLICATION_XML_VALUE
     )
     public ResponseEntity<String> route(
