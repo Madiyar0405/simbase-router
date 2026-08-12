@@ -8,6 +8,7 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 
+import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.xpath.XPath;
@@ -22,39 +23,90 @@ public class NestedPayloadExtractor {
 
     private final DocumentBuilderFactory factory;
     private final XPath xPath = XPathFactory.newInstance().newXPath();
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     public NestedPayloadExtractor() {
-        this.factory = DocumentBuilderFactory.newInstance();
-        this.factory.setNamespaceAware(true);
+        this.factory = createSecureDocumentBuilderFactory();
+    }
+
+    /**
+     * Создаёт безопасный XML parser.
+     */
+    private DocumentBuilderFactory createSecureDocumentBuilderFactory() {
+
+        DocumentBuilderFactory factory =
+                DocumentBuilderFactory.newInstance();
+
+        factory.setNamespaceAware(true);
 
         try {
-            // Защита от XXE
-            this.factory.setFeature(
+
+            /*
+             * Запрещаем DOCTYPE.
+             */
+            factory.setFeature(
                     "http://apache.org/xml/features/disallow-doctype-decl",
                     true
             );
+
+            /*
+             * Запрещаем external entities.
+             */
+            factory.setFeature(
+                    "http://xml.org/sax/features/external-general-entities",
+                    false
+            );
+
+            factory.setFeature(
+                    "http://xml.org/sax/features/external-parameter-entities",
+                    false
+            );
+
+            factory.setFeature(
+                    "http://apache.org/xml/features/nonvalidating/load-external-dtd",
+                    false
+            );
+
+            factory.setXIncludeAware(false);
+            factory.setExpandEntityReferences(false);
+
+            factory.setAttribute(
+                    XMLConstants.ACCESS_EXTERNAL_DTD,
+                    ""
+            );
+
+            factory.setAttribute(
+                    XMLConstants.ACCESS_EXTERNAL_SCHEMA,
+                    ""
+            );
+
         } catch (Exception e) {
             throw new IllegalStateException(
                     "Не удалось настроить XML-парсер",
                     e
             );
         }
+
+        return factory;
     }
 
     /**
-     * Извлекает senderId из внешнего SOAP XML.
+     * Извлекает senderId из SOAP.
      */
     public String extractLogin(Document outerDoc) {
+
         try {
-            String text = (String) xPath.evaluate(
-                    "//*[local-name()='senderId']",
-                    outerDoc,
-                    XPathConstants.STRING
-            );
+
+            String text =
+                    (String) xPath.evaluate(
+                            "//*[local-name()='senderId']",
+                            outerDoc,
+                            XPathConstants.STRING
+                    );
 
             if (text == null || text.isBlank()) {
                 throw new IllegalArgumentException(
-                        "Элемент <senderId> отсутствует или пуст во входящем XML"
+                        "Элемент <senderId> отсутствует или пуст"
                 );
             }
 
@@ -65,26 +117,29 @@ public class NestedPayloadExtractor {
 
         } catch (Exception e) {
             throw new IllegalArgumentException(
-                    "Не удалось извлечь элемент <senderId> из входящего XML",
+                    "Не удалось извлечь <senderId>",
                     e
             );
         }
     }
 
     /**
-     * Извлекает serviceId из внешнего SOAP XML.
+     * Извлекает serviceId.
      */
     public String extractServiceId(Document outerDoc) {
+
         try {
-            String text = (String) xPath.evaluate(
-                    "//*[local-name()='serviceId']",
-                    outerDoc,
-                    XPathConstants.STRING
-            );
+
+            String text =
+                    (String) xPath.evaluate(
+                            "//*[local-name()='serviceId']",
+                            outerDoc,
+                            XPathConstants.STRING
+                    );
 
             if (text == null || text.isBlank()) {
                 throw new IllegalArgumentException(
-                        "Элемент <serviceId> отсутствует или пуст во входящем XML"
+                        "Элемент <serviceId> отсутствует или пуст"
                 );
             }
 
@@ -95,56 +150,29 @@ public class NestedPayloadExtractor {
 
         } catch (Exception e) {
             throw new IllegalArgumentException(
-                    "Не удалось извлечь элемент <serviceId> из входящего XML",
+                    "Не удалось извлечь <serviceId>",
                     e
             );
         }
     }
-    public String extractErrorId(String responseXml) {
-        try {
-            if (responseXml == null || responseXml.isBlank()) {
-                throw new IllegalArgumentException("Пустой ответ от downstream-системы");
-            }
 
-            DocumentBuilder builder = factory.newDocumentBuilder();
-            Document doc = builder.parse(new InputSource(new StringReader(responseXml)));
-
-            String errorId = (String) xPath.evaluate(
-                    "//*[local-name()='error']/@id",
-                    doc,
-                    XPathConstants.STRING
-            );
-
-            if (errorId == null || errorId.isBlank()) {
-                throw new IllegalArgumentException(
-                        "Элемент <error id=\"...\"/> отсутствует в ответе downstream-системы"
-                );
-            }
-
-            return errorId.trim();
-
-        } catch (IllegalArgumentException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new IllegalArgumentException(
-                    "Не удалось разобрать ответ downstream-системы", e
-            );
-        }
-    }
     /**
-     * Извлекает password из внешнего SOAP XML.
+     * Извлекает password.
      */
     public String extractPassword(Document outerDoc) {
+
         try {
-            String text = (String) xPath.evaluate(
-                    "//*[local-name()='password']",
-                    outerDoc,
-                    XPathConstants.STRING
-            );
+
+            String text =
+                    (String) xPath.evaluate(
+                            "//*[local-name()='password']",
+                            outerDoc,
+                            XPathConstants.STRING
+                    );
 
             if (text == null || text.isBlank()) {
                 throw new IllegalArgumentException(
-                        "Элемент <password> отсутствует или пуст во входящем XML"
+                        "Элемент <password> отсутствует или пуст"
                 );
             }
 
@@ -155,95 +183,189 @@ public class NestedPayloadExtractor {
 
         } catch (Exception e) {
             throw new IllegalArgumentException(
-                    "Не удалось извлечь элемент <password> из входящего XML",
+                    "Не удалось извлечь <password>",
                     e
             );
         }
     }
 
     /**
-     * Извлекает содержимое элемента <data>
-     * из внешнего SOAP XML.
+     * Универсальный метод.
+     *
+     * Поддерживает:
+     *
+     * 1. Новый формат:
+     *
+     * <data>
+     *     <cvRecruit>
+     *         ...
+     *     </cvRecruit>
+     * </data>
+     *
+     * 2. Старый формат:
+     *
+     * <data>
+     *     &lt;cvRecruit&gt;
+     *         ...
+     *     &lt;/cvRecruit&gt;
+     * </data>
+     *
+     * или:
+     *
+     * <data>
+     *     <![CDATA[
+     *         <cvRecruit>...</cvRecruit>
+     *     ]]>
+     * </data>
      */
-    public String extractDataElementText(Document outerDoc) {
-        try {
-            String text = (String) xPath.evaluate(
-                    "//*[local-name()='data']",
-                    outerDoc,
-                    XPathConstants.STRING
-            );
+    public Node extractDataNode(Document outerDoc) {
 
-            if (text == null || text.isBlank()) {
+        try {
+
+            Node dataNode =
+                    (Node) xPath.evaluate(
+                            "//*[local-name()='data']",
+                            outerDoc,
+                            XPathConstants.NODE
+                    );
+
+            if (dataNode == null) {
                 throw new IllegalArgumentException(
-                        "Элемент <data> отсутствует или пуст во входящем XML"
+                        "Элемент <data> отсутствует во входящем XML"
                 );
             }
 
-            return text.trim();
+            /*
+             * ==========================================
+             * ВАРИАНТ 1
+             *
+             * <data>
+             *     <cvRecruit>...</cvRecruit>
+             * </data>
+             *
+             * То есть XML уже настоящий.
+             * ==========================================
+             */
 
-        } catch (IllegalArgumentException e) {
-            throw e;
+            Node cvRecruitNode =
+                    (Node) xPath.evaluate(
+                            "./*[local-name()='cvRecruit']",
+                            dataNode,
+                            XPathConstants.NODE
+                    );
 
-        } catch (Exception e) {
-            throw new IllegalArgumentException(
-                    "Не удалось извлечь элемент <data> из входящего XML",
-                    e
-            );
-        }
-    }
+            if (cvRecruitNode != null) {
 
-    /**
-     * Извлекает код системы из vacancyCode
-     * вложенного XML.
-     */
-    public String extractSystemCode(String innerXml) {
-        try {
+                System.out.println(
+                        "DATA FORMAT: обычный вложенный XML"
+                );
+
+                return dataNode;
+            }
+
+            /*
+             * ==========================================
+             * ВАРИАНТ 2
+             *
+             * <data>
+             *     <![CDATA[
+             *         <cvRecruit>...</cvRecruit>
+             *     ]]>
+             * </data>
+             *
+             * или XML был экранирован.
+             *
+             * Получаем текст и парсим его отдельно.
+             * ==========================================
+             */
+
+            String innerXml =
+                    dataNode.getTextContent();
+
             if (innerXml == null || innerXml.isBlank()) {
                 throw new IllegalArgumentException(
-                        "Вложенный XML в элементе <data> отсутствует или пуст"
+                        "Элемент <data> пуст"
                 );
             }
 
-            DocumentBuilder builder = factory.newDocumentBuilder();
+            innerXml = innerXml.trim();
 
-            Document innerDoc = builder.parse(
-                    new InputSource(new StringReader(innerXml))
+            System.out.println(
+                    "DATA FORMAT: XML в виде текста/CDATA"
             );
 
-            String vacancyCode = (String) xPath.evaluate(
-                    "//*[local-name()='vacancyCode']",
-                    innerDoc,
-                    XPathConstants.STRING
+            Document innerDoc =
+                    parseXml(innerXml);
+
+            return innerDoc.getDocumentElement();
+
+        } catch (IllegalArgumentException e) {
+            throw e;
+
+        } catch (Exception e) {
+            throw new IllegalArgumentException(
+                    "Не удалось обработать элемент <data>",
+                    e
             );
+        }
+    }
+
+    /**
+     * Определяет systemCode.
+     *
+     * Получает vacancyCode из уже нормализованного Node.
+     */
+    public String extractSystemCode(Node dataNode) {
+
+        try {
+
+            if (dataNode == null) {
+                throw new IllegalArgumentException(
+                        "Элемент <data> отсутствует"
+                );
+            }
+
+            String vacancyCode =
+                    (String) xPath.evaluate(
+                            ".//*[local-name()='vacancyCode']",
+                            dataNode,
+                            XPathConstants.STRING
+                    );
 
             if (vacancyCode == null || vacancyCode.isBlank()) {
                 throw new IllegalArgumentException(
-                        "Элемент <vacancyCode> отсутствует или пуст во вложенном XML"
+                        "Элемент <vacancyCode> отсутствует или пуст"
                 );
             }
 
-            vacancyCode = vacancyCode.trim();
+            vacancyCode =
+                    vacancyCode.trim();
 
-            /*
-             * Для получения systemCode используется
-             * символы с 3-го по 8-й позиции.
-             *
-             * Например:
-             * vacancyCode = XX123456...
-             * systemCode = 123456
-             */
             if (vacancyCode.length() < 8) {
                 throw new IllegalArgumentException(
-                        "Некорректный формат <vacancyCode>: значение должно содержать не менее 8 символов"
+                        "Некорректный формат <vacancyCode>: " +
+                                "минимум 8 символов"
                 );
             }
 
-            String systemCode = vacancyCode.substring(2, 8);
+            /*
+             * Например:
+             *
+             * GCGFCDEV12345678
+             *
+             * substring(2, 8)
+             *
+             * GFCDEV
+             */
+            String systemCode =
+                    vacancyCode.substring(2, 8);
 
             /*
-             * Специальное правило для GFC.
+             * Специальное правило GFC.
              */
-            if (systemCode.substring(3, 6).equals("000")) {
+            if (systemCode.length() >= 6
+                    && systemCode.substring(3, 6).equals("000")) {
+
                 systemCode = "GFC";
             }
 
@@ -254,107 +376,129 @@ public class NestedPayloadExtractor {
 
         } catch (Exception e) {
             throw new IllegalArgumentException(
-                    "Не удалось определить код системы из <vacancyCode>",
+                    "Не удалось определить systemCode",
                     e
             );
         }
     }
 
     /**
-     * Парсит вложенный XML из <data>,
-     * преобразует данные cv/recruit в объект,
-     * затем сериализует его в JSON.
+     * Преобразует cvRecruit в JSON.
      */
-    public String extractCandidateDataAndParseJson(String dataPayload) {
+    public String extractCandidateDataAndParseJson(
+            Node dataNode
+    ) {
+
         try {
-            if (dataPayload == null || dataPayload.isBlank()) {
+
+            if (dataNode == null) {
                 throw new IllegalArgumentException(
-                        "Вложенный XML в элементе <data> отсутствует или пуст"
+                        "Элемент <data> отсутствует"
                 );
             }
 
-            DocumentBuilder builder = factory.newDocumentBuilder();
+            CvRecruitResponse response =
+                    new CvRecruitResponse();
 
-            Document innerDoc = builder.parse(
-                    new InputSource(new StringReader(dataPayload))
-            );
-
-            innerDoc.getDocumentElement().normalize();
-
-            CvRecruitResponse response = new CvRecruitResponse();
             CvRecruitResponse.CvRecruit cvRecruit =
                     new CvRecruitResponse.CvRecruit();
 
             /*
-             * Обработка <cv>.
+             * Ищем cvRecruit.
              */
-            Node cvNode = (Node) xPath.evaluate(
-                    "//*[local-name()='cv']",
-                    innerDoc,
-                    XPathConstants.NODE
-            );
+            Node cvRecruitNode =
+                    (Node) xPath.evaluate(
+                            ".//*[local-name()='cvRecruit']",
+                            dataNode,
+                            XPathConstants.NODE
+                    );
+
+            /*
+             * Если dataNode сам является cvRecruit
+             * (например, старый формат после parseXml).
+             */
+            if (cvRecruitNode == null
+                    && "cvRecruit".equals(
+                    dataNode.getLocalName())) {
+
+                cvRecruitNode = dataNode;
+            }
+
+            if (cvRecruitNode == null) {
+                throw new IllegalArgumentException(
+                        "В XML отсутствует элемент <cvRecruit>"
+                );
+            }
+
+            /*
+             * cv.
+             */
+            Node cvNode =
+                    (Node) xPath.evaluate(
+                            "./*[local-name()='cv']",
+                            cvRecruitNode,
+                            XPathConstants.NODE
+                    );
 
             if (cvNode != null) {
+
                 cvRecruit.setCv(
-                        parseCv(cvNode, xPath)
+                        parseCv(
+                                cvNode,
+                                xPath
+                        )
                 );
             }
 
             /*
-             * Обработка <recruit>.
+             * recruit.
              */
-            Node recruitNode = (Node) xPath.evaluate(
-                    "//*[local-name()='recruit']",
-                    innerDoc,
-                    XPathConstants.NODE
-            );
+            Node recruitNode =
+                    (Node) xPath.evaluate(
+                            "./*[local-name()='recruit']",
+                            cvRecruitNode,
+                            XPathConstants.NODE
+                    );
 
             if (recruitNode != null) {
+
                 cvRecruit.setRecruit(
-                        parseRecruit(recruitNode, xPath)
+                        parseRecruit(
+                                recruitNode,
+                                xPath
+                        )
                 );
             }
 
-            /*
-             * Если отсутствуют оба блока,
-             * XML не содержит ожидаемых данных.
-             */
-            if (cvNode == null && recruitNode == null) {
+            if (cvNode == null
+                    && recruitNode == null) {
+
                 throw new IllegalArgumentException(
-                        "Во вложенном XML отсутствуют элементы <cv> и <recruit>"
+                        "В <cvRecruit> отсутствуют <cv> и <recruit>"
                 );
             }
 
-            response.setCvRecruit(cvRecruit);
+            response.setCvRecruit(
+                    cvRecruit
+            );
 
-            /*
-             * Преобразование объекта в JSON.
-             */
-            try {
-                ObjectMapper mapper = new ObjectMapper();
-
-                return mapper.writeValueAsString(response);
-
-            } catch (Exception e) {
-                throw new IllegalArgumentException(
-                        "Не удалось преобразовать данные кандидата в JSON",
-                        e
-                );
-            }
+            return objectMapper.writeValueAsString(
+                    response
+            );
 
         } catch (IllegalArgumentException e) {
             throw e;
 
         } catch (Exception e) {
             throw new IllegalArgumentException(
-                    "Не удалось обработать данные кандидата из элемента <data>",
+                    "Не удалось преобразовать cvRecruit в JSON",
                     e
             );
         }
     }
 
     /**
-     * Парсит элемент <cv>.
+     * Парсит cv.
      */
     private CvRecruitResponse.Cv parseCv(
             Node cvNode,
@@ -443,16 +587,27 @@ public class NestedPayloadExtractor {
         );
 
         String consentRelocate =
-                textOf(cvNode, xPath, "consentRelocate");
+                textOf(
+                        cvNode,
+                        xPath,
+                        "consentRelocate"
+                );
 
         if (!consentRelocate.isEmpty()) {
+
             cv.setConsentRelocate(
-                    Boolean.parseBoolean(consentRelocate)
+                    Boolean.parseBoolean(
+                            consentRelocate
+                    )
             );
         }
 
         cv.setCode(
-                textOf(cvNode, xPath, "code")
+                textOf(
+                        cvNode,
+                        xPath,
+                        "code"
+                )
         );
 
         cv.setProfArea(
@@ -476,42 +631,60 @@ public class NestedPayloadExtractor {
         );
 
         cv.setDesiredNote(
-                textOf(cvNode, xPath, "desiredNote")
+                textOf(
+                        cvNode,
+                        xPath,
+                        "desiredNote"
+                )
         );
 
-        /*
-         * Experience.
-         */
         String experience =
-                textOf(cvNode, xPath, "experience");
+                textOf(
+                        cvNode,
+                        xPath,
+                        "experience"
+                );
 
         if (!experience.isEmpty()) {
+
             try {
+
                 cv.setExperience(
-                        Integer.parseInt(experience)
+                        Integer.parseInt(
+                                experience
+                        )
                 );
+
             } catch (NumberFormatException e) {
+
                 throw new IllegalArgumentException(
-                        "Некорректное значение <experience>: ожидается целое число",
+                        "Некорректное значение <experience>",
                         e
                 );
             }
         }
 
-        /*
-         * Desired salary.
-         */
         String salary =
-                textOf(cvNode, xPath, "desiredSalary");
+                textOf(
+                        cvNode,
+                        xPath,
+                        "desiredSalary"
+                );
 
         if (!salary.isEmpty()) {
+
             try {
+
                 cv.setDesiredSalary(
-                        Integer.parseInt(salary)
+                        Integer.parseInt(
+                                salary
+                        )
                 );
+
             } catch (NumberFormatException e) {
+
                 throw new IllegalArgumentException(
-                        "Некорректное значение <desiredSalary>: ожидается целое число",
+                        "Некорректное значение <desiredSalary>",
                         e
                 );
             }
@@ -538,11 +711,15 @@ public class NestedPayloadExtractor {
         );
 
         cv.setDateCreate(
-                textOf(cvNode, xPath, "dateCreate")
+                textOf(
+                        cvNode,
+                        xPath,
+                        "dateCreate"
+                )
         );
 
         /*
-         * Опыт работы.
+         * cvExperienceList.
          */
         NodeList expNodes =
                 (NodeList) xPath.evaluate(
@@ -551,10 +728,13 @@ public class NestedPayloadExtractor {
                         XPathConstants.NODESET
                 );
 
-        List < CvRecruitResponse.CvExperience > expList =
-                new ArrayList < > ();
+        List<CvRecruitResponse.CvExperience> expList =
+                new ArrayList<>();
 
-        for (int i = 0; i < expNodes.getLength(); i++) {
+        for (int i = 0;
+             i < expNodes.getLength();
+             i++) {
+
             expList.add(
                     parseExperience(
                             expNodes.item(i),
@@ -563,13 +743,15 @@ public class NestedPayloadExtractor {
             );
         }
 
-        cv.setCvExperienceList(expList);
+        cv.setCvExperienceList(
+                expList
+        );
 
         return cv;
     }
 
     /**
-     * Парсит элемент опыта работы.
+     * Парсит опыт работы.
      */
     private CvRecruitResponse.CvExperience parseExperience(
             Node node,
@@ -590,31 +772,58 @@ public class NestedPayloadExtractor {
         );
 
         exp.setProfNote(
-                textOf(node, xPath, "profNote")
+                textOf(
+                        node,
+                        xPath,
+                        "profNote"
+                )
         );
 
         exp.setEmpName(
-                textOf(node, xPath, "empName")
+                textOf(
+                        node,
+                        xPath,
+                        "empName"
+                )
         );
 
         exp.setDuties(
-                textOf(node, xPath, "duties")
+                textOf(
+                        node,
+                        xPath,
+                        "duties"
+                )
         );
 
         exp.setBDate(
-                textOf(node, xPath, "bDate")
+                textOf(
+                        node,
+                        xPath,
+                        "bDate"
+                )
         );
 
         exp.setEDate(
-                textOf(node, xPath, "eDate")
+                textOf(
+                        node,
+                        xPath,
+                        "eDate"
+                )
         );
 
         String consentWork =
-                textOf(node, xPath, "consentWork");
+                textOf(
+                        node,
+                        xPath,
+                        "consentWork"
+                );
 
         if (!consentWork.isEmpty()) {
+
             exp.setConsentWork(
-                    Boolean.parseBoolean(consentWork)
+                    Boolean.parseBoolean(
+                            consentWork
+                    )
             );
         }
 
@@ -622,7 +831,7 @@ public class NestedPayloadExtractor {
     }
 
     /**
-     * Парсит элемент <recruit>.
+     * Парсит recruit.
      */
     private CvRecruitResponse.Recruit parseRecruit(
             Node node,
@@ -633,23 +842,43 @@ public class NestedPayloadExtractor {
                 new CvRecruitResponse.Recruit();
 
         recruit.setRecruitCode(
-                textOf(node, xPath, "recruitCode")
+                textOf(
+                        node,
+                        xPath,
+                        "recruitCode"
+                )
         );
 
         recruit.setMsgDate(
-                textOf(node, xPath, "msgDate")
+                textOf(
+                        node,
+                        xPath,
+                        "msgDate"
+                )
         );
 
         recruit.setVacancyCode(
-                textOf(node, xPath, "vacancyCode")
+                textOf(
+                        node,
+                        xPath,
+                        "vacancyCode"
+                )
         );
 
         recruit.setCodeIin(
-                textOf(node, xPath, "codeIin")
+                textOf(
+                        node,
+                        xPath,
+                        "codeIin"
+                )
         );
 
         recruit.setCvCode(
-                textOf(node, xPath, "cvCode")
+                textOf(
+                        node,
+                        xPath,
+                        "cvCode"
+                )
         );
 
         recruit.setStatus(
@@ -663,19 +892,18 @@ public class NestedPayloadExtractor {
         );
 
         recruit.setMsgText(
-                textOf(node, xPath, "msgText")
+                textOf(
+                        node,
+                        xPath,
+                        "msgText"
+                )
         );
 
         return recruit;
     }
 
     /**
-     * Парсит справочник вида:
-     *
-     * <dictionary>
-     *     <code>...</code>
-     *     <name>...</name>
-     * </dictionary>
+     * Парсит dictionary.
      */
     private CvRecruitResponse.Dictionary parseDictionary(
             Node node
@@ -691,20 +919,26 @@ public class NestedPayloadExtractor {
         NodeList children =
                 node.getChildNodes();
 
-        for (int i = 0; i < children.getLength(); i++) {
+        for (int i = 0;
+             i < children.getLength();
+             i++) {
 
             Node child =
                     children.item(i);
 
-            if ("code".equals(child.getLocalName())) {
+            if ("code".equals(
+                    child.getLocalName())) {
+
                 dict.setCode(
-                        child.getTextContent()
+                        child.getTextContent().trim()
                 );
             }
 
-            if ("name".equals(child.getLocalName())) {
+            if ("name".equals(
+                    child.getLocalName())) {
+
                 dict.setName(
-                        child.getTextContent()
+                        child.getTextContent().trim()
                 );
             }
         }
@@ -713,7 +947,8 @@ public class NestedPayloadExtractor {
     }
 
     /**
-     * Получает текст дочернего элемента.
+     * Получает текст непосредственного
+     * дочернего элемента.
      */
     private String textOf(
             Node contextNode,
@@ -728,8 +963,79 @@ public class NestedPayloadExtractor {
                         XPathConstants.STRING
                 );
 
-        return value == null ?
-                "" :
-                value.trim();
+        return value == null
+                ? ""
+                : value.trim();
+    }
+
+    /**
+     * Парсит XML String.
+     */
+    private Document parseXml(String xml)
+            throws Exception {
+
+        if (xml == null || xml.isBlank()) {
+            throw new IllegalArgumentException(
+                    "XML пуст"
+            );
+        }
+
+        DocumentBuilder builder =
+                factory.newDocumentBuilder();
+
+        return builder.parse(
+                new InputSource(
+                        new StringReader(xml)
+                )
+        );
+    }
+
+    /**
+     * Извлекает error id из ответа downstream.
+     */
+    public String extractErrorId(
+            String responseXml
+    ) {
+
+        try {
+
+            if (responseXml == null
+                    || responseXml.isBlank()) {
+
+                throw new IllegalArgumentException(
+                        "Пустой ответ от downstream-системы"
+                );
+            }
+
+            Document doc =
+                    parseXml(responseXml);
+
+            String errorId =
+                    (String) xPath.evaluate(
+                            "//*[local-name()='error']/@id",
+                            doc,
+                            XPathConstants.STRING
+                    );
+
+            if (errorId == null
+                    || errorId.isBlank()) {
+
+                throw new IllegalArgumentException(
+                        "Элемент <error id=\"...\"/> " +
+                                "отсутствует в ответе downstream-системы"
+                );
+            }
+
+            return errorId.trim();
+
+        } catch (IllegalArgumentException e) {
+            throw e;
+
+        } catch (Exception e) {
+            throw new IllegalArgumentException(
+                    "Не удалось разобрать ответ downstream-системы",
+                    e
+            );
+        }
     }
 }
