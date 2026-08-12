@@ -222,14 +222,34 @@ public class NestedPayloadExtractor {
 
         try {
 
-            Node dataNode =
-                    (Node) xPath.evaluate(
+            /*
+             * Ищем все элементы <data>.
+             *
+             * В новом XML может быть:
+             *
+             * <ns4:data>
+             *     <request>
+             *         <requestData>
+             *             <data>
+             *                 <cvRecruit>...</cvRecruit>
+             *             </data>
+             *         </requestData>
+             *     </request>
+             * </ns4:data>
+             *
+             * Поэтому нельзя просто брать первый <data>.
+             */
+
+            NodeList dataNodes =
+                    (NodeList) xPath.evaluate(
                             "//*[local-name()='data']",
                             outerDoc,
-                            XPathConstants.NODE
+                            XPathConstants.NODESET
                     );
 
-            if (dataNode == null) {
+            if (dataNodes == null
+                    || dataNodes.getLength() == 0) {
+
                 throw new IllegalArgumentException(
                         "Элемент <data> отсутствует во входящем XML"
                 );
@@ -237,72 +257,102 @@ public class NestedPayloadExtractor {
 
             /*
              * ==========================================
-             * ВАРИАНТ 1
-             *
-             * <data>
-             *     <cvRecruit>...</cvRecruit>
-             * </data>
-             *
-             * То есть XML уже настоящий.
+             * Ищем <data>, внутри которого уже есть
+             * настоящий <cvRecruit>.
              * ==========================================
              */
 
-            Node cvRecruitNode =
-                    (Node) xPath.evaluate(
-                            "./*[local-name()='cvRecruit']",
-                            dataNode,
-                            XPathConstants.NODE
+            for (int i = 0;
+                 i < dataNodes.getLength();
+                 i++) {
+
+                Node dataNode =
+                        dataNodes.item(i);
+
+                Node cvRecruitNode =
+                        (Node) xPath.evaluate(
+                                ".//*[local-name()='cvRecruit']",
+                                dataNode,
+                                XPathConstants.NODE
+                        );
+
+                if (cvRecruitNode != null) {
+
+                    System.out.println(
+                            "DATA FORMAT: обычный вложенный XML"
                     );
 
-            if (cvRecruitNode != null) {
-
-                System.out.println(
-                        "DATA FORMAT: обычный вложенный XML"
-                );
-
-                return dataNode;
+                    return dataNode;
+                }
             }
 
             /*
              * ==========================================
-             * ВАРИАНТ 2
-             *
-             * <data>
-             *     <![CDATA[
-             *         <cvRecruit>...</cvRecruit>
-             *     ]]>
-             * </data>
-             *
-             * или XML был экранирован.
-             *
-             * Получаем текст и парсим его отдельно.
+             * Если настоящего cvRecruit нет,
+             * значит <data> может содержать XML
+             * в виде текста / CDATA.
              * ==========================================
              */
 
-            String innerXml =
-                    dataNode.getTextContent();
+            for (int i = 0;
+                 i < dataNodes.getLength();
+                 i++) {
 
-            if (innerXml == null || innerXml.isBlank()) {
-                throw new IllegalArgumentException(
-                        "Элемент <data> пуст"
-                );
+                Node dataNode =
+                        dataNodes.item(i);
+
+                String text =
+                        dataNode.getTextContent();
+
+                if (text == null || text.isBlank()) {
+                    continue;
+                }
+
+                text = text.trim();
+
+                /*
+                 * Пробуем распарсить содержимое data
+                 * как отдельный XML.
+                 */
+                try {
+
+                    Document innerDoc =
+                            parseXml(text);
+
+                    Node cvRecruitNode =
+                            (Node) xPath.evaluate(
+                                    "//*[local-name()='cvRecruit']",
+                                    innerDoc,
+                                    XPathConstants.NODE
+                            );
+
+                    if (cvRecruitNode != null) {
+
+                        System.out.println(
+                                "DATA FORMAT: XML в виде текста/CDATA"
+                        );
+
+                        return innerDoc.getDocumentElement();
+                    }
+
+                } catch (Exception ignored) {
+                    /*
+                     * Это был не XML-текст.
+                     * Переходим к следующему <data>.
+                     */
+                }
             }
 
-            innerXml = innerXml.trim();
-
-            System.out.println(
-                    "DATA FORMAT: XML в виде текста/CDATA"
+            throw new IllegalArgumentException(
+                    "В элементах <data> отсутствует <cvRecruit>"
             );
 
-            Document innerDoc =
-                    parseXml(innerXml);
-
-            return innerDoc.getDocumentElement();
-
         } catch (IllegalArgumentException e) {
+
             throw e;
 
         } catch (Exception e) {
+
             throw new IllegalArgumentException(
                     "Не удалось обработать элемент <data>",
                     e
