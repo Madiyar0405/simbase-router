@@ -10,6 +10,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -48,14 +49,11 @@ public class IngressController {
         this.incomingAuthService = incomingAuthService;
     }
 
-    @PostMapping(
+    @GetMapping(
             value = {"/route", "/route/test"},
             consumes = MediaType.APPLICATION_XML_VALUE
     )
-    public ResponseEntity<String> route(
-            @RequestBody byte[] incomingBytes,
-            HttpServletRequest request
-    ) {
+    public ResponseEntity<String> route(@RequestBody byte[] incomingBytes,HttpServletRequest request) {
 
         /*
          * ==========================================
@@ -63,14 +61,9 @@ public class IngressController {
          * ==========================================
          */
 
-        String incomingXml =
-                new String(
-                        incomingBytes,
-                        StandardCharsets.UTF_8
-                );
+        String incomingXml = new String(incomingBytes,StandardCharsets.UTF_8);
 
-        Document outerDoc =
-                parseXml(incomingXml);
+        Document outerDoc = parseXml(incomingXml);
 
         /*
          * ==========================================
@@ -78,20 +71,11 @@ public class IngressController {
          * ==========================================
          */
 
-        String senderId =
-                nestedPayloadExtractor.extractLogin(
-                        outerDoc
-                );
+        String senderId = nestedPayloadExtractor.extractLogin(outerDoc);
 
-        String password =
-                nestedPayloadExtractor.extractPassword(
-                        outerDoc
-                );
+        String password = nestedPayloadExtractor.extractPassword(outerDoc);
 
-        String serviceId =
-                nestedPayloadExtractor.extractServiceId(
-                        outerDoc
-                );
+        String serviceId = nestedPayloadExtractor.extractServiceId(outerDoc);
 
         /*
          * ==========================================
@@ -99,14 +83,9 @@ public class IngressController {
          * ==========================================
          */
 
-        incomingAuthService.isAuthorized(
-                senderId,
-                password
-        );
+        incomingAuthService.isAuthorized(senderId,password);
 
-        incomingAuthService.isServiceIdCorrect(
-                serviceId
-        );
+        incomingAuthService.isServiceIdCorrect(serviceId);
 
         /*
          * ==========================================
@@ -120,10 +99,7 @@ public class IngressController {
          * ==========================================
          */
 
-        org.w3c.dom.Node dataNode =
-                nestedPayloadExtractor.extractDataNode(
-                        outerDoc
-                );
+        org.w3c.dom.Node dataNode =nestedPayloadExtractor.extractDataNode(outerDoc);
 
         /*
          * ==========================================
@@ -131,14 +107,7 @@ public class IngressController {
          * ==========================================
          */
 
-        String systemCode =
-                nestedPayloadExtractor.extractSystemCode(
-                        dataNode
-                );
-
-        System.out.println(
-                "SYSTEM CODE: " + systemCode
-        );
+        String systemCode = nestedPayloadExtractor.extractSystemCode(dataNode);
 
         /*
          * ==========================================
@@ -146,13 +115,9 @@ public class IngressController {
          * ==========================================
          */
 
-        RoutingService.RouteMatch match =
-                routingService.resolveRouteBySystemCode(
-                        systemCode
-                );
+        RoutingService.RouteMatch match =routingService.resolveRouteBySystemCode(systemCode);
 
-        RoutesProperties.RouteConfig cfg =
-                match.config();
+        RoutesProperties.RouteConfig cfg = match.config();
 
         /*
          * ==========================================
@@ -160,16 +125,7 @@ public class IngressController {
          * ==========================================
          */
 
-        String dataIntoJson =
-                nestedPayloadExtractor
-                        .extractCandidateDataAndParseJson(
-                                dataNode
-                        );
-
-        System.out.println(
-                "CANDIDATE JSON: "
-                        + dataIntoJson
-        );
+        String dataIntoJson = nestedPayloadExtractor.extractCandidateDataAndParseJson(dataNode);
 
         /*
          * ==========================================
@@ -194,10 +150,7 @@ public class IngressController {
                         dataIntoJson
                 );
 
-        String outgoingXml =
-                envelopeBuilder.build(
-                        buildRequest
-                );
+        String outgoingXml =envelopeBuilder.build(buildRequest);
 
         /*
          * ==========================================
@@ -253,20 +206,17 @@ public class IngressController {
     /**
      * Безопасный XML parser для внешнего SOAP.
      */
-    private Document parseXml(
-            String xml
-    ) {
+    private Document parseXml(String xml) {
 
         try {
 
-            if (xml == null || xml.isBlank()) {
-                throw new IllegalArgumentException(
-                        "Входящий XML пуст"
-                );
+            if (xml == null || xml.isBlank())
+            {
+                throw new IllegalArgumentException("Входящий XML пуст");
+
             }
 
-            DocumentBuilderFactory factory =
-                    DocumentBuilderFactory.newInstance();
+            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 
             factory.setNamespaceAware(true);
 
@@ -309,14 +259,9 @@ public class IngressController {
                     ""
             );
 
-            DocumentBuilder builder =
-                    factory.newDocumentBuilder();
+            DocumentBuilder builder = factory.newDocumentBuilder();
 
-            return builder.parse(
-                    new InputSource(
-                            new StringReader(xml)
-                    )
-            );
+            return builder.parse(new InputSource(new StringReader(xml)));
 
         } catch (Exception e) {
 
@@ -330,18 +275,13 @@ public class IngressController {
     /**
      * Нормализация IP.
      */
-    private String normalizeIp(
-            String ip
-    ) {
+    private String normalizeIp(String ip) {
 
         if (ip == null || ip.isBlank()) {
             return "127.0.0.1";
         }
 
-        if (
-                ip.equals("0:0:0:0:0:0:0:1")
-                        || ip.equals("::1")
-        ) {
+        if (ip.equals("0:0:0:0:0:0:0:1") || ip.equals("::1")) {
             return "127.0.0.1";
         }
 

@@ -18,19 +18,14 @@ public class IncomingAuthService{
 
     public void isServiceIdCorrect(String actualServiceId){
 
-        boolean serviceOk = MessageDigest.isEqual(
-                incomingAuthProperties.getServiceId().getBytes(StandardCharsets.UTF_8),
-                actualServiceId.getBytes(StandardCharsets.UTF_8));
+        boolean serviceOk = MessageDigest.isEqual(incomingAuthProperties.getServiceId().getBytes(StandardCharsets.UTF_8), actualServiceId.getBytes(StandardCharsets.UTF_8));
         if (!serviceOk) {
             throw new IllegalArgumentException("Неверный serviceId.");
         }
     }
 
-    public void isAuthorized(String actualSenderId,
-                                String actualPassword) {
-
-        boolean senderOk = MessageDigest.isEqual(
-                incomingAuthProperties.getSenderId().getBytes(StandardCharsets.UTF_8),
+    public void isAuthorized(String actualSenderId, String actualPassword) {
+        boolean senderOk = MessageDigest.isEqual(incomingAuthProperties.getSenderId().getBytes(StandardCharsets.UTF_8),
                 actualSenderId.getBytes(StandardCharsets.UTF_8));
 
         boolean passwordOk = MessageDigest.isEqual(
