@@ -77,30 +77,32 @@ public class SbApiEnvelopeBuilder {
                 : "Message processing failed";
 
         return """
-                <?xml version="1.0" encoding="UTF-8"?>
-                <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ns1="http://bip.bee.kz/SyncChannel/v10/Types">
-                    <soap:Body>
-                        <ns1:SendMessageResponse>
-                            <response>
-                                <responseInfo>
-                                    <messageId>%s</messageId>
-                                    <responseDate>%s</responseDate>
-                                    <status>
-                                        <code>%s</code>
-                                        <message>%s</message>
-                                    </status>
-                                </responseInfo>
-                                <responseData>
-                                    <data>
-                                        <Note>%s</Note>
-                                        <DateEntry>%s</DateEntry>
-                                    </data>
-                                </responseData>
-                            </response>
-                        </ns1:SendMessageResponse>
-                    </soap:Body>
-                </soap:Envelope>
-                """.formatted(
+            <?xml version="1.0" encoding="UTF-8"?>
+            <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ns1="http://bip.bee.kz/SyncChannel/v10/Types">
+                <soap:Body>
+                    <ns1:SendMessageResponse>
+                        <response>
+                            <responseInfo>
+                                <messageId>%s</messageId>
+                                <responseDate>%s</responseDate>
+                                <status>
+                                    <code>%s</code>
+                                    <message>%s</message>
+                                </status>
+                            </responseInfo>
+                            <responseData>
+                                <data xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                                      xmlns:ns4="http://model.integration.recruitment.gov4c.kz"
+                                      xsi:type="ns4:SendMessageResponse">
+                                    <Note xmlns="http://model.integration.recruitment.gov4c.kz">%s</Note>
+                                    <DateEntry xmlns="http://model.integration.recruitment.gov4c.kz">%s</DateEntry>
+                                </data>
+                            </responseData>
+                        </response>
+                    </ns1:SendMessageResponse>
+                </soap:Body>
+            </soap:Envelope>
+            """.formatted(
                 messageId,
                 responseDate,
                 statusCode,
@@ -109,7 +111,6 @@ public class SbApiEnvelopeBuilder {
                 responseDate
         );
     }
-
     public long nextMsgId() {
         return msgIdSequence.getAndIncrement();
     }
