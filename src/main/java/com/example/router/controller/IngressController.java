@@ -53,15 +53,37 @@ public class IngressController {
             value = {"/route", "/route/test"},
             consumes = MediaType.APPLICATION_XML_VALUE
     )
-    public ResponseEntity<String> route(@RequestBody byte[] incomingBytes,HttpServletRequest request) {
+    public ResponseEntity<String> route(@RequestBody(required = false) byte[] incomingBytes,HttpServletRequest request) {
 
+
+
+        // Если XML отсутствует или пустой — просто 200 OK
+        if (incomingBytes == null || incomingBytes.length == 0) {
+            return ResponseEntity
+                    .ok()
+                    .contentType(MediaType.APPLICATION_XML)
+                    .body("SUCCESS");
+        }
+
+        String incomingXml = new String(
+                incomingBytes,
+                StandardCharsets.UTF_8
+        );
+
+        // Если пришли только пробелы / переносы строк
+        if (incomingXml.isBlank()) {
+            return ResponseEntity
+                    .ok()
+                    .contentType(MediaType.APPLICATION_XML)
+                    .body("SUCCESS");
+        }
         /*
          * ==========================================
          * 1. Получаем входящий SOAP
          * ==========================================
          */
 
-        String incomingXml = new String(incomingBytes,StandardCharsets.UTF_8);
+//        String incomingXml = new String(incomingBytes,StandardCharsets.UTF_8);
 
         Document outerDoc = parseXml(incomingXml);
 
