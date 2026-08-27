@@ -10,9 +10,9 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 import org.w3c.dom.Document;
 import org.xml.sax.InputSource;
@@ -49,13 +49,33 @@ public class IngressController {
         this.incomingAuthService = incomingAuthService;
     }
 
-    @GetMapping(
-            value = {"/route", "/route/test"},
-            consumes = MediaType.APPLICATION_XML_VALUE
+    /*
+     * GET /route/test — health-check от шлюза, всегда просто SUCCESS,
+     * тело не читаем и не обрабатываем.
+     */
+    @RequestMapping(
+            value = "/route/test",
+            method = RequestMethod.GET
     )
-    public ResponseEntity<String> route(@RequestBody(required = false) byte[] incomingBytes,HttpServletRequest request) {
+    public ResponseEntity<String> routeTest() {
+        return ResponseEntity
+                .ok()
+                .contentType(MediaType.APPLICATION_XML)
+                .body("SUCCESS");
+    }
 
-
+    /*
+     * POST /route — полноценная бизнес-логика.
+     * Пустое тело -> просто SUCCESS (как и раньше).
+     */
+    @RequestMapping(
+            value = "/route",
+            method = RequestMethod.POST
+    )
+    public ResponseEntity<String> route(
+            @RequestBody(required = false) byte[] incomingBytes,
+            HttpServletRequest request
+    ) {
 
         // Если XML отсутствует или пустой — просто 200 OK
         if (incomingBytes == null || incomingBytes.length == 0) {
@@ -77,13 +97,12 @@ public class IngressController {
                     .contentType(MediaType.APPLICATION_XML)
                     .body("SUCCESS");
         }
+
         /*
          * ==========================================
          * 1. Получаем входящий SOAP
          * ==========================================
          */
-
-//        String incomingXml = new String(incomingBytes,StandardCharsets.UTF_8);
 
         Document outerDoc = parseXml(incomingXml);
 
@@ -105,7 +124,7 @@ public class IngressController {
          * ==========================================
          */
 
-        incomingAuthService.isAuthorized(senderId,password);
+        incomingAuthService.isAuthorized(senderId, password);
 
         incomingAuthService.isServiceIdCorrect(serviceId);
 
@@ -121,7 +140,7 @@ public class IngressController {
          * ==========================================
          */
 
-        org.w3c.dom.Node dataNode =nestedPayloadExtractor.extractDataNode(outerDoc);
+        org.w3c.dom.Node dataNode = nestedPayloadExtractor.extractDataNode(outerDoc);
 
         /*
          * ==========================================
@@ -137,7 +156,7 @@ public class IngressController {
          * ==========================================
          */
 
-        RoutingService.RouteMatch match =routingService.resolveRouteBySystemCode(systemCode);
+        RoutingService.RouteMatch match = routingService.resolveRouteBySystemCode(systemCode);
 
         RoutesProperties.RouteConfig cfg = match.config();
 
@@ -172,7 +191,7 @@ public class IngressController {
                         dataIntoJson
                 );
 
-        String outgoingXml =envelopeBuilder.build(buildRequest);
+        String outgoingXml = envelopeBuilder.build(buildRequest);
 
         /*
          * ==========================================
@@ -232,8 +251,7 @@ public class IngressController {
 
         try {
 
-            if (xml == null || xml.isBlank())
-            {
+            if (xml == null || xml.isBlank()) {
                 throw new IllegalArgumentException("Входящий XML пуст");
 
             }
