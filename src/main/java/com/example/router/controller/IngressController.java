@@ -119,10 +119,9 @@ public class IngressController {
          * ==========================================
          */
 
-        String senderId = nestedPayloadExtractor.extractLogin(outerDoc);
+//        String senderId = nestedPayloadExtractor.extractLogin(outerDoc);
 
-        String password = nestedPayloadExtractor.extractPassword(outerDoc);
-
+//        String password = nestedPayloadExtractor.extractPassword(outerDoc);
         String serviceId = nestedPayloadExtractor.extractServiceId(outerDoc);
 
         /*
@@ -131,7 +130,7 @@ public class IngressController {
          * ==========================================
          */
 
-        incomingAuthService.isAuthorized(senderId, password);
+//        incomingAuthService.isAuthorized(senderId, password);
 
         incomingAuthService.isServiceIdCorrect(serviceId);
 

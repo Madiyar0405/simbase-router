@@ -198,8 +198,8 @@ routes:
 
 incoming-auth:
   service-id: BPM_SIMBASE_ROUTER_SERVICE
-  sender-id: Enbek
-  password: Enbek
+#  sender-id: Enbek
+#  password: Enbek
 
 logging:
   level:
