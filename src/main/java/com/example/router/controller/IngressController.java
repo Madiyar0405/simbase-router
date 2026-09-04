@@ -50,23 +50,23 @@ public class IngressController {
     }
 
     /*
-     * GET /route/test — health-check от шлюза, всегда просто SUCCESS,
-     * тело не читаем и не обрабатываем.
+     * GET/POST /route/test — теперь полностью повторяет логику /route:
+     * парсинг, авторизация, роутинг, отправка downstream, реальный ответ.
+     * Пустое тело -> просто SUCCESS.
      */
     @RequestMapping(
             value = "/route/test",
-            method = RequestMethod.GET
+            method = {RequestMethod.GET, RequestMethod.POST}
     )
-    public ResponseEntity<String> routeTest() {
-        return ResponseEntity
-                .ok()
-                .contentType(MediaType.APPLICATION_XML)
-                .body("SUCCESS");
+    public ResponseEntity<String> routeTest(
+            @RequestBody(required = false) byte[] incomingBytes,
+            HttpServletRequest request
+    ) {
+        return processRoute(incomingBytes, request);
     }
 
     /*
      * POST /route — полноценная бизнес-логика.
-     * Пустое тело -> просто SUCCESS (как и раньше).
      */
     @RequestMapping(
             value = "/route",
@@ -76,6 +76,13 @@ public class IngressController {
             @RequestBody(required = false) byte[] incomingBytes,
             HttpServletRequest request
     ) {
+        return processRoute(incomingBytes, request);
+    }
+
+    /*
+     * Общая бизнес-логика обработки входящего XML для /route и /route/test.
+     */
+    private ResponseEntity<String> processRoute(byte[] incomingBytes, HttpServletRequest request) {
 
         // Если XML отсутствует или пустой — просто 200 OK
         if (incomingBytes == null || incomingBytes.length == 0) {
@@ -131,12 +138,6 @@ public class IngressController {
         /*
          * ==========================================
          * 4. Получаем <data>
-         *
-         * Метод сам определит:
-         *
-         * - обычный XML
-         * - CDATA
-         * - экранированный XML
          * ==========================================
          */
 
@@ -253,7 +254,6 @@ public class IngressController {
 
             if (xml == null || xml.isBlank()) {
                 throw new IllegalArgumentException("Входящий XML пуст");
-
             }
 
             DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
