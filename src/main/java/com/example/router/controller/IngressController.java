@@ -1,4 +1,5 @@
-package com.example.router.controller;
+
+        package com.example.router.controller;
 
 import com.example.router.config.RoutesProperties;
 import com.example.router.service.IncomingAuthService;
@@ -50,9 +51,27 @@ public class IngressController {
     }
 
     /*
-     * GET/POST /route/test — теперь полностью повторяет логику /route:
-     * парсинг, авторизация, роутинг, отправка downstream, реальный ответ.
-     * Пустое тело -> просто SUCCESS.
+     * GET /route
+     *
+     * Просто проверка доступности сервиса.
+     * Никакая бизнес-логика не выполняется.
+     */
+    @RequestMapping(
+            value = "/route",
+            method = RequestMethod.GET
+    )
+    public ResponseEntity<String> routeGet() {
+        return ResponseEntity
+                .ok()
+                .contentType(MediaType.TEXT_PLAIN)
+                .body("SUCCESS");
+    }
+
+    /*
+     * GET/POST /route/test
+     *
+     * Оставляем без изменений.
+     * И GET, и POST выполняют processRoute().
      */
     @RequestMapping(
             value = "/route/test",
@@ -66,7 +85,11 @@ public class IngressController {
     }
 
     /*
-     * POST /route — полноценная бизнес-логика.
+     * POST /route
+     *
+     * Полноценная бизнес-логика:
+     * парсинг XML, авторизация, роутинг,
+     * отправка downstream и формирование ответа.
      */
     @RequestMapping(
             value = "/route",
@@ -80,9 +103,13 @@ public class IngressController {
     }
 
     /*
-     * Общая бизнес-логика обработки входящего XML для /route и /route/test.
+     * Общая бизнес-логика обработки входящего XML
+     * для POST /route и GET/POST /route/test.
      */
-    private ResponseEntity<String> processRoute(byte[] incomingBytes, HttpServletRequest request) {
+    private ResponseEntity<String> processRoute(
+            byte[] incomingBytes,
+            HttpServletRequest request
+    ) {
 
         // Если XML отсутствует или пустой — просто 200 OK
         if (incomingBytes == null || incomingBytes.length == 0) {
@@ -119,10 +146,12 @@ public class IngressController {
          * ==========================================
          */
 
-//        String senderId = nestedPayloadExtractor.extractLogin(outerDoc);
+        // String senderId = nestedPayloadExtractor.extractLogin(outerDoc);
 
-//        String password = nestedPayloadExtractor.extractPassword(outerDoc);
-        String serviceId = nestedPayloadExtractor.extractServiceId(outerDoc);
+        // String password = nestedPayloadExtractor.extractPassword(outerDoc);
+
+        String serviceId =
+                nestedPayloadExtractor.extractServiceId(outerDoc);
 
         /*
          * ==========================================
@@ -130,7 +159,7 @@ public class IngressController {
          * ==========================================
          */
 
-//        incomingAuthService.isAuthorized(senderId, password);
+        // incomingAuthService.isAuthorized(senderId, password);
 
         incomingAuthService.isServiceIdCorrect(serviceId);
 
@@ -140,7 +169,8 @@ public class IngressController {
          * ==========================================
          */
 
-        org.w3c.dom.Node dataNode = nestedPayloadExtractor.extractDataNode(outerDoc);
+        org.w3c.dom.Node dataNode =
+                nestedPayloadExtractor.extractDataNode(outerDoc);
 
         /*
          * ==========================================
@@ -148,7 +178,8 @@ public class IngressController {
          * ==========================================
          */
 
-        String systemCode = nestedPayloadExtractor.extractSystemCode(dataNode);
+        String systemCode =
+                nestedPayloadExtractor.extractSystemCode(dataNode);
 
         /*
          * ==========================================
@@ -156,9 +187,11 @@ public class IngressController {
          * ==========================================
          */
 
-        RoutingService.RouteMatch match = routingService.resolveRouteBySystemCode(systemCode);
+        RoutingService.RouteMatch match =
+                routingService.resolveRouteBySystemCode(systemCode);
 
-        RoutesProperties.RouteConfig cfg = match.config();
+        RoutesProperties.RouteConfig cfg =
+                match.config();
 
         /*
          * ==========================================
@@ -166,7 +199,9 @@ public class IngressController {
          * ==========================================
          */
 
-        String dataIntoJson = nestedPayloadExtractor.extractCandidateDataAndParseJson(dataNode);
+        String dataIntoJson =
+                nestedPayloadExtractor
+                        .extractCandidateDataAndParseJson(dataNode);
 
         /*
          * ==========================================
@@ -191,7 +226,8 @@ public class IngressController {
                         dataIntoJson
                 );
 
-        String outgoingXml = envelopeBuilder.build(buildRequest);
+        String outgoingXml =
+                envelopeBuilder.build(buildRequest);
 
         /*
          * ==========================================
@@ -238,9 +274,7 @@ public class IngressController {
 
         return ResponseEntity
                 .status(HttpStatus.OK)
-                .contentType(
-                        MediaType.APPLICATION_XML
-                )
+                .contentType(MediaType.APPLICATION_XML)
                 .body(responseXml);
     }
 
@@ -252,10 +286,13 @@ public class IngressController {
         try {
 
             if (xml == null || xml.isBlank()) {
-                throw new IllegalArgumentException("Входящий XML пуст");
+                throw new IllegalArgumentException(
+                        "Входящий XML пуст"
+                );
             }
 
-            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+            DocumentBuilderFactory factory =
+                    DocumentBuilderFactory.newInstance();
 
             factory.setNamespaceAware(true);
 
@@ -298,9 +335,14 @@ public class IngressController {
                     ""
             );
 
-            DocumentBuilder builder = factory.newDocumentBuilder();
+            DocumentBuilder builder =
+                    factory.newDocumentBuilder();
 
-            return builder.parse(new InputSource(new StringReader(xml)));
+            return builder.parse(
+                    new InputSource(
+                            new StringReader(xml)
+                    )
+            );
 
         } catch (Exception e) {
 
@@ -320,7 +362,8 @@ public class IngressController {
             return "127.0.0.1";
         }
 
-        if (ip.equals("0:0:0:0:0:0:0:1") || ip.equals("::1")) {
+        if (ip.equals("0:0:0:0:0:0:0:1")
+                || ip.equals("::1")) {
             return "127.0.0.1";
         }
 
